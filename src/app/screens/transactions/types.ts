@@ -24,6 +24,7 @@ export interface TransactionsTransactionItem {
   type?: string;
   status?: string;
   description?: string;
+  recipientID?: number | string | null;
   [key: string]: any;
 }
 
@@ -58,12 +59,16 @@ export interface ParticipantFundBalanceItem {
 export interface RecipientItem {
   recipientID: number;
   recipientName: string;
+  recipientCode?: string;
 }
 
 export interface TransactionFormValues {
   participantName: string;
+  participantID?: number;
   fund: string;
+  fundID?: number;
   transactionCodeDesc: string;
+  transactionCode?: string;
   fundPrice: string;
   transactionDate: string;
   hasFee: boolean;
@@ -76,3 +81,36 @@ export interface TransactionFormValues {
   recipientID?: string;
 }
 
+export interface AddTransactionPayload {
+  ParticipantId?: number;
+  FundId?: number;
+  FundPrice?: number;
+  SettleDate?: string | null;
+  TransactionCode?: string;
+  RecipientID?: number | null;
+  HasFees: "Y" | "N";
+  notes?: string | null;
+  transactionUnits?: string;
+  TransactionAmount?: number;
+  reenterAmount?: number;
+  TransactionDate?: string;
+  FeeAmount?: number;
+  [key: string]: any;
+}
+
+export interface EditTransactionPayload {
+  FundId?: number;
+  FundPrice?: number;
+  participantID?: number;
+  ParticipantId?: number;
+  RecipientID?: number | null;
+  TransactionCode?: string;
+  HasFees: "Y" | "N";
+  notes?: string | null;
+  TransactionDate?: string;
+  TransactionAmount?: number;
+  transactionUnits?: string;
+  reenterAmount?: number;
+  FeeAmount?: number;
+  [key: string]: any;
+}

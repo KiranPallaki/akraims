@@ -22,19 +22,26 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 import TextFilterPopover, {
   TextFilterValue,
 } from "@/components/common/TextFilterPopover";
 import NumericFilterPopover from "@/components/common/NumericFilterPopover";
-import Pagination from "@/components/common/Pagination";
-import { Filter, FileSpreadsheet, FileText, Search, X } from "lucide-react";
+import { FileSpreadsheet, FileText } from "lucide-react";
 
 interface ParticipantBalancesTableProps {
   data: ParticipantBalanceItem[];
   isLoading?: boolean;
+  maxHeight?: string;
+  className?: string;
 }
 
 // Accessor helpers
+function truncateText(str: string, maxLen: number = 40): string {
+  if (!str || str.length <= maxLen) return str;
+  return `${str.slice(0, maxLen)}...`;
+}
+
 function getNum(item: ParticipantBalanceItem): string {
   return String(
     item.Number ??
@@ -105,6 +112,8 @@ const numericMultiSelectFilterFn: FilterFn<ParticipantBalanceItem> = (
 export default function ParticipantBalancesTable({
   data = [],
   isLoading = false,
+  maxHeight = "max-h-[50vh] xl:max-h-[calc(100vh-340px)]",
+  className,
 }: ParticipantBalancesTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -133,8 +142,6 @@ export default function ParticipantBalancesTable({
         filterFn: textFilterFn,
         header: ({ column }) => {
           const isSorted = column.getIsSorted();
-          const filterValue = column.getFilterValue() as TextFilterValue | null;
-          const isFiltered = !!(filterValue && filterValue.value);
 
           return (
             <div className="flex items-center justify-between gap-1 py-1">
@@ -153,17 +160,6 @@ export default function ParticipantBalancesTable({
               >
                 Number
               </button>
-
-              <div className="relative inline-block">
-                {activePopoverCol === "number" && (
-                  <TextFilterPopover
-                    columnTitle="Number"
-                    initialFilter={filterValue}
-                    onApply={(val) => column.setFilterValue(val)}
-                    onClose={() => setActivePopoverCol(null)}
-                  />
-                )}
-              </div>
             </div>
           );
         },
@@ -179,8 +175,6 @@ export default function ParticipantBalancesTable({
         filterFn: textFilterFn,
         header: ({ column }) => {
           const isSorted = column.getIsSorted();
-          const filterValue = column.getFilterValue() as TextFilterValue | null;
-          const isFiltered = !!(filterValue && filterValue.value);
 
           return (
             <div className="flex items-center justify-between gap-1 py-1">
@@ -202,11 +196,17 @@ export default function ParticipantBalancesTable({
             </div>
           );
         },
-        cell: ({ row }) => (
-          <span className="text-right font-medium text-slate-700 text-[13px] sm:text-[13px]">
-            {getName(row.original)}
-          </span>
-        ),
+        cell: ({ row }) => {
+          const name = getName(row.original);
+          return (
+            <span
+              className="text-left font-medium text-slate-700 text-[13px] sm:text-[13px] block truncate max-w-[200px]"
+              title={name}
+            >
+              {truncateText(name, 40)}
+            </span>
+          );
+        },
       },
       {
         id: "balance",
@@ -214,12 +214,6 @@ export default function ParticipantBalancesTable({
         filterFn: numericMultiSelectFilterFn,
         header: ({ column }) => {
           const isSorted = column.getIsSorted();
-          const filterValue = column.getFilterValue() as number[] | null;
-          const isFiltered = !!(
-            filterValue &&
-            filterValue.length > 0 &&
-            filterValue.length < uniqueBalances.length
-          );
 
           return (
             <div className="flex items-center justify-end gap-1 py-1">
@@ -238,37 +232,6 @@ export default function ParticipantBalancesTable({
               >
                 Balance
               </button>
-
-              <div className="relative inline-block">
-                {/* <button
-                  onClick={() =>
-                    setActivePopoverCol(
-                      activePopoverCol === "balance" ? null : "balance",
-                    )
-                  }
-                  className={`p-1.5 rounded-md transition-all ${
-                    isFiltered
-                      ? "bg-blue-600 text-white font-bold shadow-xs"
-                      : activePopoverCol === "balance"
-                        ? "bg-blue-50 text-blue-600 border border-blue-200"
-                        : "text-slate-400 hover:bg-slate-100 hover:text-slate-700"
-                  }`}
-                  title="Filter Balance"
-                >
-                  {/* <Filter className="h-3.5 w-3.5" /> */}
-                {/* </button> */}
-
-                {activePopoverCol === "balance" && (
-                  <NumericFilterPopover
-                    columnTitle="Balance"
-                    uniqueValues={uniqueBalances}
-                    formatFn={formatCurrency}
-                    initialFilter={filterValue}
-                    onApply={(val) => column.setFilterValue(val)}
-                    onClose={() => setActivePopoverCol(null)}
-                  />
-                )}
-              </div>
             </div>
           );
         },
@@ -284,12 +247,6 @@ export default function ParticipantBalancesTable({
         filterFn: numericMultiSelectFilterFn,
         header: ({ column }) => {
           const isSorted = column.getIsSorted();
-          const filterValue = column.getFilterValue() as number[] | null;
-          const isFiltered = !!(
-            filterValue &&
-            filterValue.length > 0 &&
-            filterValue.length < uniquePcts.length
-          );
 
           return (
             <div className="flex items-center justify-end gap-1 py-1">
@@ -308,37 +265,6 @@ export default function ParticipantBalancesTable({
               >
                 %
               </button>
-
-              <div className="relative inline-block">
-                {/* <button
-                  onClick={() =>
-                    setActivePopoverCol(
-                      activePopoverCol === "pct" ? null : "pct",
-                    )
-                  }
-                  className={`p-1.5 rounded-md transition-all ${
-                    isFiltered
-                      ? "bg-blue-600 text-white font-bold shadow-xs"
-                      : activePopoverCol === "pct"
-                        ? "bg-blue-50 text-blue-600 border border-blue-200"
-                        : "text-slate-400 hover:bg-slate-100 hover:text-slate-700"
-                  }`}
-                  title="Filter Percentage"
-                >
-                  {/* <Filter className="h-3.5 w-3.5" /> */}
-                {/* </button> */}
-
-                {activePopoverCol === "pct" && (
-                  <NumericFilterPopover
-                    columnTitle="Percentage"
-                    uniqueValues={uniquePcts}
-                    formatFn={(v) => `${v.toFixed(2)}%`}
-                    initialFilter={filterValue}
-                    onApply={(val) => column.setFilterValue(val)}
-                    onClose={() => setActivePopoverCol(null)}
-                  />
-                )}
-              </div>
             </div>
           );
         },
@@ -352,11 +278,6 @@ export default function ParticipantBalancesTable({
     [activePopoverCol, uniqueBalances, uniquePcts],
   );
 
-  const [pagination, setPagination] = useState({
-    pageIndex: 0,
-    pageSize: 5,
-  });
-
   const table = useReactTable({
     data,
     columns,
@@ -364,12 +285,10 @@ export default function ParticipantBalancesTable({
       sorting,
       columnFilters,
       globalFilter,
-      pagination,
     },
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     onGlobalFilterChange: setGlobalFilter,
-    onPaginationChange: setPagination,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
@@ -410,41 +329,26 @@ export default function ParticipantBalancesTable({
   };
 
   return (
-    <div className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
+    <div
+      className={cn(
+        "bg-white p-2 sm:p-2 rounded-lg border border-slate-200/80 shadow-xs flex flex-col justify-between h-full space-y-4",
+        className,
+      )}
+    >
       {/* Table Top Header: Title & Export Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1 pt-1">
         <div>
-          <h4 className="text-md  sm:text-sm font-semibold text-slate-900 tracking-tight">
+          <h4 className="text-md sm:text-sm font-semibold text-slate-900 tracking-tight">
             Participant Balances
           </h4>
         </div>
 
         <div className="flex items-center gap-3">
-          {/* Global Search Input */}
-          {/* <div className="relative">
-            <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400" />
-            <input
-              type="text"
-              value={globalFilter ?? ""}
-              onChange={(e) => setGlobalFilter(e.target.value)}
-              placeholder="Search participants..."
-              className="pl-8 pr-3 py-1.5 text-xs border border-slate-200 rounded-lg bg-white shadow-xs focus:outline-none focus:ring-2 focus:ring-blue-500 w-44 sm:w-52"
-            />
-            {globalFilter && (
-              <button
-                onClick={() => setGlobalFilter("")}
-                className="absolute right-2 top-2 text-slate-400 hover:text-slate-600"
-              >
-                <X className="h-3.5 w-3.5" />
-              </button>
-            )}
-          </div> */}
-
           {/* Export Icons */}
           <div className="flex items-center gap-2">
             <button
               onClick={handleExportCSV}
-              className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition-colors shadow-xs"
+              className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition-colors shadow-xs cursor-pointer"
               title="Export to Excel / CSV"
             >
               <div className="relative flex items-center justify-center">
@@ -457,7 +361,7 @@ export default function ParticipantBalancesTable({
 
             <button
               onClick={handleExportPDF}
-              className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition-colors shadow-xs"
+              className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition-colors shadow-xs cursor-pointer"
               title="Export to PDF"
             >
               <div className="relative flex items-center justify-center">
@@ -472,76 +376,77 @@ export default function ParticipantBalancesTable({
       </div>
 
       {/* Main Table Card */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
-        <div className="max-h-[250px] overflow-y-auto overflow-x-auto">
-          <Table>
-            <TableHeader className="sticky top-0 bg-white z-10 shadow-xs border-b border-slate-200">
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id} className="hover:bg-transparent">
-                  {headerGroup.headers.map((header) => (
-                    <TableHead key={header.id} className="bg-white">
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext(),
-                          )}
-                    </TableHead>
-                  ))}
-                </TableRow>
-              ))}
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={columns.length}
-                    className="h-34 text-center"
+      <div className="bg-white rounded-lg border border-slate-200 shadow-xs overflow-hidden flex-1 flex flex-col justify-between">
+        <Table containerClassName={cn("overflow-y-auto relative", maxHeight)}>
+          <TableHeader className="sticky top-0 z-30 bg-white shadow-2xs border-b border-slate-200">
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow
+                key={headerGroup.id}
+                className="hover:bg-transparent border-b border-slate-200 bg-white"
+              >
+                {headerGroup.headers.map((header) => (
+                  <TableHead key={header.id} className="bg-white py-2">
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )}
+                  </TableHead>
+                ))}
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {isLoading ? (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-36 text-center"
+                >
+                  <div className="flex items-center justify-center gap-2 text-slate-500">
+                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-slate-300 border-t-blue-600" />
+                    <span>Loading participant balances...</span>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : table.getRowModel().rows.length === 0 ? (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-28 text-center text-slate-500 text-xs font-medium"
+                >
+                  No data available
+                </TableCell>
+              </TableRow>
+            ) : (
+              table.getRowModel().rows.map((row) => {
+                const num = getNum(row.original);
+                const isSelected = selectedRowId === num;
+                return (
+                  <TableRow
+                    key={row.id}
+                    onClick={() => setSelectedRowId(num)}
+                    className={`cursor-pointer transition-colors ${
+                      isSelected
+                        ? "bg-sky-50/80 border-sky-200 font-medium"
+                        : "hover:bg-slate-50/80"
+                    }`}
                   >
-                    <div className="flex items-center justify-center gap-2 text-slate-500">
-                      <div className="h-5 w-5 animate-spin rounded-full border-2 border-slate-300 border-t-blue-600" />
-                      <span>Loading participant balances...</span>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ) : table.getRowModel().rows.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={columns.length}
-                    className="h-28 text-center text-slate-500 text-xs font-medium"
-                  >
-                    No data available
-                  </TableCell>
-                </TableRow>
-              ) : (
-                table.getRowModel().rows.map((row) => {
-                  const num = getNum(row.original);
-                  const isSelected = selectedRowId === num;
-                  return (
-                    <TableRow
-                      key={row.id}
-                      onClick={() => setSelectedRowId(num)}
-                      className={`cursor-pointer transition-colors ${
-                        isSelected
-                          ? "bg-sky-50/80 border-sky-200 font-medium"
-                          : "hover:bg-slate-50/80"
-                      }`}
-                    >
-                      {row.getVisibleCells().map((cell) => (
-                        <TableCell key={cell.id}>
-                          {flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext(),
-                          )}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  );
-                })
-              )}
-            </TableBody>
-          </Table>
-        </div>
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id} className="py-2">
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                );
+              })
+            )}
+          </TableBody>
+        </Table>
       </div>
     </div>
   );

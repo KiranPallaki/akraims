@@ -66,11 +66,11 @@ export default function PopoverSelect({
           type="button"
           disabled={disabled}
           className={cn(
-            "flex h-9 w-full items-center justify-between rounded-md border border-slate-300 bg-white px-3 py-2 text-xs sm:text-[12px] text-slate-800 shadow-2xs transition-colors hover:bg-slate-50/80 focus:border-portal-navy focus:outline-none disabled:cursor-not-allowed disabled:opacity-50",
+            "flex h-9 w-full min-w-0 items-center justify-between rounded-md border border-slate-300 bg-white px-3 py-2 text-xs sm:text-[12px] text-slate-800 shadow-2xs transition-colors hover:bg-slate-50/80 focus:border-portal-navy focus:outline-none disabled:cursor-not-allowed disabled:opacity-50",
             className,
           )}
         >
-          <span className="truncate">
+          <span className="truncate text-left flex-1 min-w-0">
             {selectedOption ? selectedOption.label : placeholder}
           </span>
           <ChevronDown className="ml-2 h-4 w-4 shrink-0 text-slate-400" />

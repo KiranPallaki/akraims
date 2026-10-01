@@ -40,6 +40,8 @@ export interface ReusableTableProps<TData> {
   headerFontSize?: string;
   /** Container CSS class name prop */
   containerClassName?: string;
+  /** Max height for table scroll container */
+  maxHeight?: string;
   /** Table element CSS class name prop */
   tableClassName?: string;
   /** Header row CSS class name prop */
@@ -72,6 +74,7 @@ export default function ReusableTable<TData>({
   fontSize,
   headerFontSize,
   containerClassName,
+  maxHeight = "max-h-[60vh] lg:max-h-[calc(100vh-270px)]",
   tableClassName,
   headerClassName,
   headerCellClassName,
@@ -93,7 +96,9 @@ export default function ReusableTable<TData>({
   // Resolve merged config (Global defaults overridden by component props)
   const resolvedConfig = getMergedTableConfig({
     density: density || GLOBAL_TABLE_CONFIG.density,
-    rowPadding: padding || (density ? DENSITY_PADDING_MAP[density] : GLOBAL_TABLE_CONFIG.rowPadding),
+    rowPadding:
+      padding ||
+      (density ? DENSITY_PADDING_MAP[density] : GLOBAL_TABLE_CONFIG.rowPadding),
     fontSize: fontSize || GLOBAL_TABLE_CONFIG.fontSize,
     headerFontSize: headerFontSize || GLOBAL_TABLE_CONFIG.headerFontSize,
     emptyMessage: emptyMessage || GLOBAL_TABLE_CONFIG.emptyMessage,
@@ -113,7 +118,9 @@ export default function ReusableTable<TData>({
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: enablePagination ? getPaginationRowModel() : undefined,
+    getPaginationRowModel: enablePagination
+      ? getPaginationRowModel()
+      : undefined,
   });
 
   return (
@@ -121,97 +128,109 @@ export default function ReusableTable<TData>({
       <div
         className={cn(
           resolvedConfig.containerClass,
-          containerClassName
+          "relative overflow-y-auto overflow-x-auto",
+          maxHeight,
+          containerClassName,
         )}
       >
-        <div className="w-full overflow-x-auto">
-          <table className={cn("w-full text-left border-collapse", resolvedConfig.fontSize, tableClassName)}>
-            <thead className={cn(resolvedConfig.headerBg, headerClassName)}>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <tr key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => (
-                    <th
-                      key={header.id}
-                      className={cn(
-                        resolvedConfig.rowPadding,
-                        resolvedConfig.headerFontSize,
-                        "align-middle select-none",
-                        headerCellClassName
-                      )}
-                    >
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                    </th>
-                  ))}
-                </tr>
-              ))}
-            </thead>
-
-            <tbody className="divide-y divide-slate-100 bg-white">
-              {isLoading ? (
-                <tr>
-                  <td
-                    colSpan={columns.length}
-                    className={cn("text-center py-12", resolvedConfig.fontSize)}
-                  >
-                    <div className="flex items-center justify-center gap-2.5 text-slate-500 font-medium">
-                      <div className="h-5 w-5 animate-spin rounded-full border-2 border-slate-300 border-t-blue-600" />
-                      <span>Loading transactions...</span>
-                    </div>
-                  </td>
-                </tr>
-              ) : table.getRowModel().rows.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={columns.length}
+        <table
+          className={cn(
+            "w-full text-left border-collapse",
+            resolvedConfig.fontSize,
+            tableClassName,
+          )}
+        >
+          <thead
+            className={cn(
+              "sticky top-0 z-30 shadow-2xs border-b border-slate-200",
+              resolvedConfig.headerBg,
+              headerClassName,
+            )}
+          >
+            {table.getHeaderGroups().map((headerGroup) => (
+              <tr key={headerGroup.id} className="bg-slate-50">
+                {headerGroup.headers.map((header) => (
+                  <th
+                    key={header.id}
                     className={cn(
-                      "text-center py-10 text-slate-500 font-medium",
-                      resolvedConfig.fontSize
+                      resolvedConfig.rowPadding,
+                      resolvedConfig.headerFontSize,
+                      "align-middle select-none bg-slate-50 py-2.5",
+                      headerCellClassName,
                     )}
                   >
-                    {resolvedConfig.emptyMessage}
-                  </td>
-                </tr>
-              ) : (
-                table.getRowModel().rows.map((row, idx) => {
-                  const isSelected = selectedIndex === idx;
-                  return (
-                    <tr
-                      key={row.id}
-                      onClick={() => onRowClick?.(row.original, idx)}
-                      className={cn(
-                        resolvedConfig.hoverBg,
-                        isSelected && resolvedConfig.selectedBg,
-                        onRowClick && "cursor-pointer",
-                        rowClassName
-                      )}
-                    >
-                      {row.getVisibleCells().map((cell) => (
-                        <td
-                          key={cell.id}
-                          className={cn(
-                            resolvedConfig.rowPadding,
-                            "align-middle text-slate-700",
-                            cellClassName
-                          )}
-                        >
-                          {flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext()
-                          )}
-                        </td>
-                      ))}
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )}
+                  </th>
+                ))}
+              </tr>
+            ))}
+          </thead>
+
+          <tbody className="divide-y divide-slate-100 bg-white">
+            {isLoading ? (
+              <tr>
+                <td
+                  colSpan={columns.length}
+                  className={cn("text-center py-12", resolvedConfig.fontSize)}
+                >
+                  <div className="flex items-center justify-center gap-2.5 text-slate-500 font-medium">
+                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-slate-300 border-t-blue-600" />
+                    <span>Loading transactions...</span>
+                  </div>
+                </td>
+              </tr>
+            ) : table.getRowModel().rows.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={columns.length}
+                  className={cn(
+                    "text-center py-10 text-slate-500 font-medium",
+                    resolvedConfig.fontSize,
+                  )}
+                >
+                  {resolvedConfig.emptyMessage}
+                </td>
+              </tr>
+            ) : (
+              table.getRowModel().rows.map((row, idx) => {
+                const isSelected = selectedIndex === idx;
+                return (
+                  <tr
+                    key={row.id}
+                    onClick={() => onRowClick?.(row.original, idx)}
+                    className={cn(
+                      resolvedConfig.hoverBg,
+                      isSelected && resolvedConfig.selectedBg,
+                      onRowClick && "cursor-pointer",
+                      rowClassName,
+                    )}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <td
+                        key={cell.id}
+                        className={cn(
+                          resolvedConfig.rowPadding,
+                          "align-middle text-slate-700",
+                          cellClassName,
+                        )}
+                      >
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )}
+                      </td>
+                    ))}
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
       </div>
 
       {enablePagination && table.getRowModel().rows.length > 0 && (

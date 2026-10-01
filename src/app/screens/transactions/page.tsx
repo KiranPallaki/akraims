@@ -4,16 +4,30 @@ import React, { useEffect, useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getSelectedClient } from "@/stores/authStore";
 import { Client } from "@/types/client";
-import { fetchTransactionsData } from "./api";
+import {
+  fetchTransactionsData,
+  fetchParticipantFundBalances,
+  fetchTransactionCodeList,
+  submitAddTransaction,
+  submitUpdateTransaction,
+} from "./api";
 import {
   TransactionsTransactionItem,
   TransactionsTabType,
   TransactionFormValues,
+  ParticipantFundBalanceItem,
+  TransactionCodeItem,
 } from "./types";
+import {
+  buildAddTransactionPayload,
+  buildEditTransactionPayload,
+  parseNumericValue,
+} from "./utils/transactionUtils";
 import SearchBar from "@/components/common/SearchBar";
 import TransactionsTab from "./components/TransactionsTab";
 import PendingTransactionsTab from "./components/PendingTransactionsTab";
 import AddTransactionForm from "./components/AddTransactionForm";
+import DeleteTransactionModal from "./components/DeleteTransactionModal";
 import { FileSpreadsheet, FileText, RotateCw, Plus, X } from "lucide-react";
 
 export default function TransactionsPage() {
@@ -23,7 +37,7 @@ export default function TransactionsPage() {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedRowIndex, setSelectedRowIndex] = useState<number | null>(null);
   const [addedItems, setAddedItems] = useState<TransactionsTransactionItem[]>(
-    [],
+    []
   );
   const [deletedTxnIds, setDeletedTxnIds] = useState<(number | string)[]>([]);
   const [editingTxn, setEditingTxn] =
@@ -31,6 +45,12 @@ export default function TransactionsPage() {
 
   // Slide-over Drawer State for "Add / Edit Transaction"
   const [isAddDrawerOpen, setIsAddDrawerOpen] = useState<boolean>(false);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [formApiError, setFormApiError] = useState<string | null>(null);
+
+  // Delete Transaction Modal State
+  const [deleteModalItem, setDeleteModalItem] =
+    useState<TransactionsTransactionItem | null>(null);
 
   useEffect(() => {
     const selected = getSelectedClient();
@@ -39,7 +59,7 @@ export default function TransactionsPage() {
 
   const clientID = client?.clientID;
 
-  // React TanStack Query Hook
+  // React TanStack Query Hooks for transactions and dropdown references
   const {
     data: fetchedData = [],
     isLoading,
@@ -50,11 +70,25 @@ export default function TransactionsPage() {
     queryFn: async () => {
       const res = await fetchTransactionsData<TransactionsTransactionItem>(
         activeTab,
-        clientID,
+        clientID
       );
       return res.data;
     },
     staleTime: 1000 * 60 * 2,
+  });
+
+  const { data: participantFundBalances = [] } = useQuery<
+    ParticipantFundBalanceItem[]
+  >({
+    queryKey: ["participantFundBalances", clientID],
+    queryFn: () => fetchParticipantFundBalances(clientID),
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const { data: transactionCodeList = [] } = useQuery<TransactionCodeItem[]>({
+    queryKey: ["transactionCodeList", clientID],
+    queryFn: () => fetchTransactionCodeList(clientID),
+    staleTime: 1000 * 60 * 5,
   });
 
   // Combine query data with local created items and filter deleted items
@@ -62,7 +96,7 @@ export default function TransactionsPage() {
     const combined = [...addedItems, ...fetchedData];
     if (deletedTxnIds.length === 0) return combined;
     return combined.filter(
-      (item) => !deletedTxnIds.includes(item.transactionID),
+      (item) => !deletedTxnIds.includes(item.transactionID)
     );
   }, [addedItems, fetchedData, deletedTxnIds]);
 
@@ -71,6 +105,7 @@ export default function TransactionsPage() {
     setAddedItems([]);
     setDeletedTxnIds([]);
     setEditingTxn(null);
+    setFormApiError(null);
   };
 
   const handleRefresh = () => {
@@ -79,20 +114,19 @@ export default function TransactionsPage() {
 
   const handleEditRow = (item: TransactionsTransactionItem) => {
     setEditingTxn(item);
+    setFormApiError(null);
     setIsAddDrawerOpen(true);
   };
 
   const handleDeleteRow = (item: TransactionsTransactionItem) => {
-    if (
-      confirm(
-        `Are you sure you want to delete transaction ${item.transactionID}?`,
-      )
-    ) {
-      setAddedItems((prev) =>
-        prev.filter((i) => i.transactionID !== item.transactionID),
-      );
-      setDeletedTxnIds((prev) => [...prev, item.transactionID]);
-    }
+    // PDF Section 9 & 10: Opens Delete Confirmation Modal
+    setDeleteModalItem(item);
+  };
+
+  const handleDeleteSuccess = (deletedId: number | string) => {
+    setAddedItems((prev) => prev.filter((i) => i.transactionID !== deletedId));
+    setDeletedTxnIds((prev) => [...prev, deletedId]);
+    refetch();
   };
 
   // CSV / Excel Export Handler
@@ -123,7 +157,7 @@ export default function TransactionsPage() {
       const notes = `"${(row.notes || "").replace(/"/g, '""')}"`;
 
       csvRows.push(
-        [id, name, fund, code, date, amt, units, fee, notes].join(","),
+        [id, name, fund, code, date, amt, units, fee, notes].join(",")
       );
     });
 
@@ -135,7 +169,7 @@ export default function TransactionsPage() {
     link.href = url;
     link.setAttribute(
       "download",
-      `${activeTab}_${new Date().toISOString().slice(0, 10)}.csv`,
+      `${activeTab}_${new Date().toISOString().slice(0, 10)}.csv`
     );
     document.body.appendChild(link);
     link.click();
@@ -147,42 +181,129 @@ export default function TransactionsPage() {
     window.print();
   };
 
-  // Form Submit Handler for Add/Edit Form
-  const handleFormSubmit = (values: TransactionFormValues) => {
-    const updatedItem: TransactionsTransactionItem = {
-      userID: "9dce56ac-35bf-48e5-8fc9-62303e66de2f",
-      clientID: clientID,
-      roleID: 1,
-      transactionID:
-        editingTxn?.transactionID || Math.floor(20000 + Math.random() * 80000),
-      participantName: values.participantName || "Kneeland Fund - Regular",
-      fund: values.fund || "PRB01",
-      fundName: "Presbytery Of Boston Endowment",
-      transactionCode: "II",
-      transactionCodeDesc: values.transactionCodeDesc || "Interest Income",
-      transactionDate: `${values.transactionDate}T00:00:00`,
-      transactionAmount: parseFloat(values.amount) || 0,
-      transactionUnits: values.units ? parseFloat(values.units) : null,
-      feeAmount: values.hasFee ? parseFloat(values.feeAmount) || 0 : 0,
-      notes: values.notes || null,
-      hasFees: values.hasFee ? "Y" : "N",
-      fundPrice: values.fundPrice
-        ? parseFloat(values.fundPrice.replace("$", ""))
-        : 0,
-    };
+  // Form Submit Handler with Duplicate Check & Response Error Banner
+  const handleFormSubmit = async (values: TransactionFormValues) => {
+    setIsSubmitting(true);
+    setFormApiError(null);
 
-    if (editingTxn) {
-      setAddedItems((prev) =>
-        prev.map((i) =>
-          i.transactionID === editingTxn.transactionID ? updatedItem : i,
-        ),
+    const numAmt = parseNumericValue(values.amount);
+    const dateStr = values.transactionDate;
+
+    // Prevent duplicate transactions check
+    const isDuplicate = transactionsData.some((item) => {
+      if (editingTxn && item.transactionID === editingTxn.transactionID) {
+        return false;
+      }
+      const itemAmt = item.transactionAmount ?? item.amount ?? 0;
+      const itemDate = (item.transactionDate || "").split("T")[0];
+      const itemPart = item.participantName || item.accountName || "";
+      const itemFund = item.fund || item.fundName || "";
+      const itemCode = item.transactionCodeDesc || item.transactionCode || "";
+
+      return (
+        itemPart.trim().toLowerCase() === values.participantName.trim().toLowerCase() &&
+        itemFund.trim().toLowerCase() === values.fund.trim().toLowerCase() &&
+        itemCode.trim().toLowerCase() === values.transactionCodeDesc.trim().toLowerCase() &&
+        itemAmt === numAmt &&
+        itemDate === dateStr
       );
-    } else {
-      setAddedItems([updatedItem, ...addedItems]);
+    });
+
+    if (isDuplicate) {
+      setIsSubmitting(false);
+      setFormApiError(
+        "Duplicate Transaction: A transaction with the exact same Participant, Fund, Transcode, Date, and Amount already exists."
+      );
+      return;
     }
 
+    if (editingTxn) {
+      // PDF Section 7 & 8: Edit Payload Construction & API Call
+      const editPayload = buildEditTransactionPayload(
+        editingTxn.transactionID,
+        values,
+        participantFundBalances,
+        transactionCodeList
+      );
+      const res = await submitUpdateTransaction(
+        editingTxn.transactionID,
+        editPayload,
+        clientID
+      );
+
+      if (!res.ok) {
+        setIsSubmitting(false);
+        setFormApiError(res.message || "Failed to update transaction.");
+        return;
+      }
+
+      const amtNum = parseNumericValue(values.amount);
+      const unitsNum = parseNumericValue(values.units);
+      const feeNum = values.hasFee ? parseNumericValue(values.feeAmount) : 0;
+
+      const updatedItem: TransactionsTransactionItem = {
+        ...editingTxn,
+        participantName: values.participantName,
+        fund: values.fund,
+        transactionCodeDesc: values.transactionCodeDesc,
+        transactionDate: `${values.transactionDate}T00:00:00`,
+        transactionAmount: amtNum,
+        transactionUnits: unitsNum || null,
+        feeAmount: feeNum,
+        notes: values.notes || null,
+        hasFees: values.hasFee ? "Y" : "N",
+      };
+
+      setAddedItems((prev) =>
+        prev.map((i) =>
+          i.transactionID === editingTxn.transactionID ? updatedItem : i
+        )
+      );
+    } else {
+      // PDF Section 1 & 2: Add Payload Construction & API Call
+      const addPayload = buildAddTransactionPayload(
+        values,
+        participantFundBalances,
+        transactionCodeList
+      );
+      const res = await submitAddTransaction(addPayload, clientID);
+
+      if (!res.ok) {
+        setIsSubmitting(false);
+        setFormApiError(res.message || "Failed to submit transaction.");
+        return;
+      }
+
+      const newTxnId = Math.floor(20000 + Math.random() * 80000);
+      const newItem: TransactionsTransactionItem = {
+        userID: "9dce56ac-35bf-48e5-8fc9-62303e66de2f",
+        clientID: clientID,
+        roleID: 1,
+        transactionID: newTxnId,
+        participantName: values.participantName,
+        fund: values.fund || "PRB01",
+        fundName: "Presbytery Of Boston Endowment",
+        transactionCode: "II",
+        transactionCodeDesc: values.transactionCodeDesc || "Interest Income",
+        transactionDate: `${values.transactionDate}T00:00:00`,
+        transactionAmount: parseNumericValue(values.amount),
+        transactionUnits: parseNumericValue(values.units) || null,
+        feeAmount: values.hasFee ? parseNumericValue(values.feeAmount) : 0,
+        notes: values.notes || null,
+        hasFees: values.hasFee ? "Y" : "N",
+        fundPrice: values.fundPrice
+          ? parseFloat(values.fundPrice.replace("$", ""))
+          : 0,
+      };
+
+      setAddedItems([newItem, ...addedItems]);
+    }
+
+    setIsSubmitting(false);
+    setFormApiError(null);
     setIsAddDrawerOpen(false);
     setEditingTxn(null);
+    refetch();
   };
 
   // Search Filter
@@ -223,21 +344,24 @@ export default function TransactionsPage() {
         hasFee: editingTxn.hasFees === "Y" || (editingTxn.feeAmount ?? 0) > 0,
         amount: String(editingTxn.transactionAmount ?? editingTxn.amount ?? ""),
         reEnterAmount: String(
-          editingTxn.transactionAmount ?? editingTxn.amount ?? "",
+          editingTxn.transactionAmount ?? editingTxn.amount ?? ""
         ),
         units:
           editingTxn.transactionUnits !== null &&
           editingTxn.transactionUnits !== undefined
             ? String(editingTxn.transactionUnits)
-            : "0",
+            : "0.000000",
         balance: "$0",
         notes: editingTxn.notes || "",
         feeAmount: String(editingTxn.feeAmount ?? "0"),
+        recipientID: editingTxn.recipientID
+          ? String(editingTxn.recipientID)
+          : undefined,
       };
     }, [editingTxn]);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {/* Main Card Container */}
       <div className="rounded-xl border border-slate-200 bg-white shadow-xs overflow-hidden">
         {/* Header Control Bar: Tabs on Left, Actions & Add Button on Right */}
@@ -324,6 +448,7 @@ export default function TransactionsPage() {
             <button
               onClick={() => {
                 setEditingTxn(null);
+                setFormApiError(null);
                 setIsAddDrawerOpen(true);
               }}
               className="flex items-center gap-1.5 rounded-md bg-portal-navy px-4 py-2 text-xs sm:text-sm font-semibold text-white shadow-sm hover:bg-portal-navy-hover active:opacity-90 transition-colors"
@@ -335,7 +460,7 @@ export default function TransactionsPage() {
         </div>
 
         {/* Tab Content rendering */}
-        <div className="p-4 sm:p-6">
+        <div className="p-2 sm:p-2">
           {activeTab === "Transactions" ? (
             <TransactionsTab
               data={filteredData}
@@ -362,12 +487,12 @@ export default function TransactionsPage() {
           {/* Backdrop */}
           <div
             className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity duration-300"
-            onClick={() => setIsAddDrawerOpen(false)}
+            onClick={() => !isSubmitting && setIsAddDrawerOpen(false)}
           />
 
           <div className="fixed inset-y-0 right-0 max-w-full flex">
             {/* Drawer Container */}
-            <div className="w-screen max-w-3xl bg-white shadow-2xl transform transition-transform duration-300 ease-in-out border-l border-slate-200 flex flex-col  overflow-y-auto">
+            <div className="w-screen max-w-3xl bg-white shadow-2xl transform transition-transform duration-300 ease-in-out border-l border-slate-200 flex flex-col overflow-y-auto">
               {/* Drawer Header */}
               <div className="flex items-center justify-between px-3 py-2 border-b border-slate-200 bg-slate-50/50">
                 <div>
@@ -381,7 +506,7 @@ export default function TransactionsPage() {
                   </p>
                 </div>
                 <button
-                  onClick={() => setIsAddDrawerOpen(false)}
+                  onClick={() => !isSubmitting && setIsAddDrawerOpen(false)}
                   className="rounded-lg p-1 text-slate-400 hover:bg-slate-200/60 hover:text-slate-700 transition-colors"
                   type="button"
                 >
@@ -390,10 +515,12 @@ export default function TransactionsPage() {
               </div>
 
               {/* Drawer Body - Reusable TanStack Form Component */}
-              <div className="p-2">
+              <div className="p-3">
                 <AddTransactionForm
                   initialValues={initialFormValues}
                   isEditing={!!editingTxn}
+                  isLoading={isSubmitting}
+                  apiErrorMessage={formApiError}
                   onSubmit={handleFormSubmit}
                   onCancel={() => setIsAddDrawerOpen(false)}
                 />
@@ -402,6 +529,15 @@ export default function TransactionsPage() {
           </div>
         </div>
       )}
+
+      {/* Reusable Delete Confirmation Modal */}
+      <DeleteTransactionModal
+        isOpen={Boolean(deleteModalItem)}
+        item={deleteModalItem}
+        clientID={clientID}
+        onClose={() => setDeleteModalItem(null)}
+        onSuccess={handleDeleteSuccess}
+      />
     </div>
   );
 }

@@ -42,18 +42,18 @@ function getVal(val?: number): number {
   return Number(val ?? 0);
 }
 
-const formatPct = (val?: number): string => {
-  if (val === undefined || val === null || Number.isNaN(val)) return "0.00%";
-  return `${val >= 0 ? "+" : ""}${val.toFixed(2)}%`;
-};
-
 const renderFormattedPct = (val?: number) => {
-  const num = val ?? 0;
-  const isPositive = num >= 0;
+  if (val === undefined || val === null || Number.isNaN(val)) {
+    return <span className="font-semibold text-slate-700 text-[13px]">0.00%</span>;
+  }
+  const isNegative = val < 0;
   return (
-    <span className={`font-semibold `}>
-      {isPositive ? "+" : ""}
-      {num.toFixed(2)}%
+    <span
+      className={`font-semibold text-[13px] ${
+        isNegative ? "text-rose-600" : "text-slate-700"
+      }`}
+    >
+      {val.toFixed(2)}%
     </span>
   );
 };
@@ -171,7 +171,7 @@ export default function FundPerformanceTable({
                   else if (isSorted === "asc") column.toggleSorting(true);
                   else column.clearSorting();
                 }}
-                className={`font-bold text-xs sm:text-[12px]  tracking-wider transition-colors cursor-pointer select-none py-0.5 rounded ${
+                className={`font-bold text-xs sm:text-[12px] tracking-wider transition-colors cursor-pointer select-none py-0.5 rounded ${
                   isSorted
                     ? "text-blue-600 font-bold"
                     : "text-slate-800 hover:text-blue-600"
@@ -184,7 +184,7 @@ export default function FundPerformanceTable({
           );
         },
         cell: ({ row }) => (
-          <span className=" text-left font-medium text-slate-700 text-[13px] sm:text-[13px]">
+          <span className="text-left font-medium text-slate-700 text-[13px] sm:text-[13px]">
             {getFundName(row.original)}
           </span>
         ),
@@ -196,11 +196,6 @@ export default function FundPerformanceTable({
         header: ({ column }) => {
           const isSorted = column.getIsSorted();
           const filterValue = column.getFilterValue() as number[] | null;
-          const isFiltered = !!(
-            filterValue &&
-            filterValue.length > 0 &&
-            filterValue.length < uniqueMTD.length
-          );
 
           return (
             <div className="flex items-center justify-end gap-1 py-1">
@@ -210,7 +205,7 @@ export default function FundPerformanceTable({
                   else if (isSorted === "asc") column.toggleSorting(true);
                   else column.clearSorting();
                 }}
-                className={`font-bold text-xs sm:text-[12px]  tracking-wider transition-colors cursor-pointer select-none py-0.5 rounded ${
+                className={`font-bold text-xs sm:text-[12px] tracking-wider transition-colors cursor-pointer select-none py-0.5 rounded ${
                   isSorted
                     ? "text-blue-600"
                     : "text-slate-900 hover:text-blue-600"
@@ -223,7 +218,7 @@ export default function FundPerformanceTable({
           );
         },
         cell: ({ row }) => (
-          <div className="text-right font-medium text-slate-700 text-[13px] sm:text-[13px]">
+          <div className="text-right">
             {renderFormattedPct(row.original.mtdNet)}
           </div>
         ),
@@ -234,12 +229,6 @@ export default function FundPerformanceTable({
         filterFn: numericMultiSelectFilterFn,
         header: ({ column }) => {
           const isSorted = column.getIsSorted();
-          const filterValue = column.getFilterValue() as number[] | null;
-          const isFiltered = !!(
-            filterValue &&
-            filterValue.length > 0 &&
-            filterValue.length < unique3M.length
-          );
 
           return (
             <div className="flex items-center justify-end gap-1 py-1">
@@ -249,7 +238,7 @@ export default function FundPerformanceTable({
                   else if (isSorted === "asc") column.toggleSorting(true);
                   else column.clearSorting();
                 }}
-                className={`font-bold text-xs sm:text-[12px]  tracking-wider transition-colors cursor-pointer select-none py-0.5 rounded ${
+                className={`font-bold text-xs sm:text-[12px] tracking-wider transition-colors cursor-pointer select-none py-0.5 rounded ${
                   isSorted
                     ? "text-blue-600"
                     : "text-slate-900 hover:text-blue-600"
@@ -262,7 +251,7 @@ export default function FundPerformanceTable({
           );
         },
         cell: ({ row }) => (
-          <div className="text-right font-medium text-slate-700 text-[13px] sm:text-[13px]">
+          <div className="text-right">
             {renderFormattedPct(row.original.threeMonthsNet)}
           </div>
         ),
@@ -273,12 +262,6 @@ export default function FundPerformanceTable({
         filterFn: numericMultiSelectFilterFn,
         header: ({ column }) => {
           const isSorted = column.getIsSorted();
-          const filterValue = column.getFilterValue() as number[] | null;
-          const isFiltered = !!(
-            filterValue &&
-            filterValue.length > 0 &&
-            filterValue.length < uniqueQTD.length
-          );
 
           return (
             <div className="flex items-center justify-end gap-1 py-1">
@@ -288,7 +271,7 @@ export default function FundPerformanceTable({
                   else if (isSorted === "asc") column.toggleSorting(true);
                   else column.clearSorting();
                 }}
-                className={`font-bold text-xs sm:text-[12px]  tracking-wider transition-colors cursor-pointer select-none py-0.5 rounded ${
+                className={`font-bold text-xs sm:text-[12px] tracking-wider transition-colors cursor-pointer select-none py-0.5 rounded ${
                   isSorted
                     ? "text-blue-600"
                     : "text-slate-900 hover:text-blue-600"
@@ -301,7 +284,7 @@ export default function FundPerformanceTable({
           );
         },
         cell: ({ row }) => (
-          <div className="text-right font-medium text-slate-700 text-[13px] sm:text-[13px]">
+          <div className="text-right">
             {renderFormattedPct(row.original.qtdNet)}
           </div>
         ),
@@ -312,12 +295,6 @@ export default function FundPerformanceTable({
         filterFn: numericMultiSelectFilterFn,
         header: ({ column }) => {
           const isSorted = column.getIsSorted();
-          const filterValue = column.getFilterValue() as number[] | null;
-          const isFiltered = !!(
-            filterValue &&
-            filterValue.length > 0 &&
-            filterValue.length < uniqueYTD.length
-          );
 
           return (
             <div className="flex items-center justify-end gap-1 py-1">
@@ -327,7 +304,7 @@ export default function FundPerformanceTable({
                   else if (isSorted === "asc") column.toggleSorting(true);
                   else column.clearSorting();
                 }}
-                className={`font-bold text-xs sm:text-[12px]  tracking-wider transition-colors cursor-pointer select-none py-0.5 rounded ${
+                className={`font-bold text-xs sm:text-[12px] tracking-wider transition-colors cursor-pointer select-none py-0.5 rounded ${
                   isSorted
                     ? "text-blue-600"
                     : "text-slate-900 hover:text-blue-600"
@@ -340,7 +317,7 @@ export default function FundPerformanceTable({
           );
         },
         cell: ({ row }) => (
-          <div className="text-right font-medium text-slate-700 text-[13px] sm:text-[13px]">
+          <div className="text-right">
             {renderFormattedPct(row.original.ytdNet)}
           </div>
         ),
@@ -351,12 +328,6 @@ export default function FundPerformanceTable({
         filterFn: numericMultiSelectFilterFn,
         header: ({ column }) => {
           const isSorted = column.getIsSorted();
-          const filterValue = column.getFilterValue() as number[] | null;
-          const isFiltered = !!(
-            filterValue &&
-            filterValue.length > 0 &&
-            filterValue.length < unique1Y.length
-          );
 
           return (
             <div className="flex items-center justify-end gap-1 py-1">
@@ -366,7 +337,7 @@ export default function FundPerformanceTable({
                   else if (isSorted === "asc") column.toggleSorting(true);
                   else column.clearSorting();
                 }}
-                className={`font-bold text-xs sm:text-[12px]  tracking-wider transition-colors cursor-pointer select-none py-0.5 rounded ${
+                className={`font-bold text-xs sm:text-[12px] tracking-wider transition-colors cursor-pointer select-none py-0.5 rounded ${
                   isSorted
                     ? "text-blue-600"
                     : "text-slate-900 hover:text-blue-600"
@@ -379,7 +350,7 @@ export default function FundPerformanceTable({
           );
         },
         cell: ({ row }) => (
-          <div className="text-right font-medium text-slate-700 text-[13px] sm:text-[13px]">
+          <div className="text-right">
             {renderFormattedPct(row.original.oneYearNet)}
           </div>
         ),
@@ -390,12 +361,6 @@ export default function FundPerformanceTable({
         filterFn: numericMultiSelectFilterFn,
         header: ({ column }) => {
           const isSorted = column.getIsSorted();
-          const filterValue = column.getFilterValue() as number[] | null;
-          const isFiltered = !!(
-            filterValue &&
-            filterValue.length > 0 &&
-            filterValue.length < unique5Y.length
-          );
 
           return (
             <div className="flex items-center justify-end gap-1 py-1">
@@ -405,7 +370,7 @@ export default function FundPerformanceTable({
                   else if (isSorted === "asc") column.toggleSorting(true);
                   else column.clearSorting();
                 }}
-                className={`font-bold text-xs sm:text-[12px]  tracking-wider transition-colors cursor-pointer select-none py-0.5 rounded${
+                className={`font-bold text-xs sm:text-[12px] tracking-wider transition-colors cursor-pointer select-none py-0.5 rounded ${
                   isSorted
                     ? "text-blue-600"
                     : "text-slate-900 hover:text-blue-600"
@@ -429,12 +394,6 @@ export default function FundPerformanceTable({
         filterFn: numericMultiSelectFilterFn,
         header: ({ column }) => {
           const isSorted = column.getIsSorted();
-          const filterValue = column.getFilterValue() as number[] | null;
-          const isFiltered = !!(
-            filterValue &&
-            filterValue.length > 0 &&
-            filterValue.length < unique10Y.length
-          );
 
           return (
             <div className="flex items-center justify-end gap-1 py-1">
@@ -444,7 +403,7 @@ export default function FundPerformanceTable({
                   else if (isSorted === "asc") column.toggleSorting(true);
                   else column.clearSorting();
                 }}
-                className={`font-bold text-xs sm:text-[12px]  tracking-wider transition-colors cursor-pointer select-none py-0.5 rounded ${
+                className={`font-bold text-xs sm:text-[12px] tracking-wider transition-colors cursor-pointer select-none py-0.5 rounded ${
                   isSorted
                     ? "text-blue-600"
                     : "text-slate-900 hover:text-blue-600"
@@ -457,7 +416,7 @@ export default function FundPerformanceTable({
           );
         },
         cell: ({ row }) => (
-          <div className="text-right font-medium text-slate-700 text-[13px] sm:text-[13px]">
+          <div className="text-right">
             {renderFormattedPct(row.original.tenYearNet)}
           </div>
         ),
@@ -532,25 +491,16 @@ export default function FundPerformanceTable({
   };
 
   return (
-    <div className="bg-white p-2 sm:p-4 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
+    <div className="bg-white p-2 sm:p-2 rounded-lg border border-slate-200/80 shadow-xs space-y-4">
       {/* Top Header: Title & Export Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1 pt-1">
         <div>
-          <h4 className="text-md  sm:text-sm font-semibold text-slate-900 tracking-tight">
+          <h4 className="text-md sm:text-sm font-semibold text-slate-900 tracking-tight">
             Fund Performance
           </h4>
         </div>
 
         <div className="flex items-center gap-3">
-          {/* Global Search */}
-          {/* <SearchBar
-            value={globalFilter ?? ""}
-            onChange={setGlobalFilter}
-            placeholder="Search performance..."
-            className="w-44 sm:w-56"
-            size="sm"
-          /> */}
-
           {/* Export Buttons */}
           <div className="flex items-center gap-2">
             <button
@@ -583,75 +533,73 @@ export default function FundPerformanceTable({
       </div>
 
       {/* Main Table Card */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
-        <div className="max-h-[250px] overflow-y-auto overflow-x-auto">
-          <Table>
-            <TableHeader className="sticky top-0 bg-white z-10 shadow-xs border-b border-slate-200">
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id} className="hover:bg-transparent">
-                  {headerGroup.headers.map((header) => (
-                    <TableHead key={header.id} className="bg-white">
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext(),
-                          )}
-                    </TableHead>
-                  ))}
-                </TableRow>
-              ))}
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={columns.length}
-                    className="h-44 text-center"
+      <div className="bg-white rounded-lg border border-slate-200 shadow-xs overflow-hidden">
+        <Table containerClassName="max-h-[50vh] lg:max-h-[calc(100vh-320px)] overflow-y-auto relative">
+          <TableHeader className="sticky top-0 z-30 bg-white shadow-2xs border-b border-slate-200">
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id} className="hover:bg-transparent border-b border-slate-200 bg-white">
+                {headerGroup.headers.map((header) => (
+                  <TableHead key={header.id} className="bg-white py-2">
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )}
+                  </TableHead>
+                ))}
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {isLoading ? (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-44 text-center"
+                >
+                  <div className="flex items-center justify-center gap-2 text-slate-500">
+                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-slate-300 border-t-blue-600" />
+                    <span>Loading fund performance...</span>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : table.getRowModel().rows.length === 0 ? (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-28 text-center text-slate-500 text-xs font-medium"
+                >
+                  No data available
+                </TableCell>
+              </TableRow>
+            ) : (
+              table.getRowModel().rows.map((row, idx) => {
+                const isSelected = selectedRowIndex === idx;
+                return (
+                  <TableRow
+                    key={row.id}
+                    onClick={() => setSelectedRowIndex(idx)}
+                    className={`cursor-pointer transition-colors ${
+                      isSelected
+                        ? "bg-sky-50/80 border-sky-200 font-medium"
+                        : "hover:bg-slate-50/80"
+                    }`}
                   >
-                    <div className="flex items-center justify-center gap-2 text-slate-500">
-                      <div className="h-5 w-5 animate-spin rounded-full border-2 border-slate-300 border-t-blue-600" />
-                      <span>Loading fund performance...</span>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ) : table.getRowModel().rows.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={columns.length}
-                    className="h-28 text-center text-slate-500 text-xs font-medium"
-                  >
-                    No data available
-                  </TableCell>
-                </TableRow>
-              ) : (
-                table.getRowModel().rows.map((row, idx) => {
-                  const isSelected = selectedRowIndex === idx;
-                  return (
-                    <TableRow
-                      key={row.id}
-                      onClick={() => setSelectedRowIndex(idx)}
-                      className={`cursor-pointer transition-colors ${
-                        isSelected
-                          ? "bg-sky-50/80 border-sky-200 font-medium"
-                          : "hover:bg-slate-50/80"
-                      }`}
-                    >
-                      {row.getVisibleCells().map((cell) => (
-                        <TableCell key={cell.id}>
-                          {flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext(),
-                          )}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  );
-                })
-              )}
-            </TableBody>
-          </Table>
-        </div>
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                );
+              })
+            )}
+          </TableBody>
+        </Table>
       </div>
     </div>
   );

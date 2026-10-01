@@ -610,7 +610,7 @@ export default function FundStatementTable({
   };
 
   return (
-    <div className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
+    <div className="bg-white p-2 sm:p-2 rounded-lg border border-slate-200/80 shadow-xs space-y-4">
       {/* Top Header: Title & Export Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1 pt-1">
         <div>
@@ -620,15 +620,6 @@ export default function FundStatementTable({
         </div>
 
         <div className="flex items-center gap-3">
-          {/* Global Search */}
-          {/* <SearchBar
-            value={globalFilter ?? ""}
-            onChange={setGlobalFilter}
-            placeholder="Search fund statement..."
-            className="w-44 sm:w-56"
-            size="sm"
-          /> */}
-
           {/* Export Buttons */}
           <div className="flex items-center gap-2">
             <button
@@ -661,14 +652,13 @@ export default function FundStatementTable({
       </div>
 
       {/* Main Table Card */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
-        <div className="max-h-[250px] overflow-y-auto overflow-x-auto">
-          <Table>
-            <TableHeader className="sticky top-0 bg-white z-10 shadow-xs border-b border-slate-200">
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id} className="hover:bg-transparent">
-                  {headerGroup.headers.map((header) => (
-                    <TableHead key={header.id} className="bg-white">
+      <div className="bg-white rounded-lg border border-slate-200 shadow-xs overflow-hidden">
+        <Table containerClassName="max-h-[50vh] lg:max-h-[calc(100vh-320px)] overflow-y-auto relative">
+          <TableHeader className="sticky top-0 z-30 bg-white shadow-2xs border-b border-slate-200">
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id} className="hover:bg-transparent border-b border-slate-200 bg-white">
+                {headerGroup.headers.map((header) => (
+                  <TableHead key={header.id} className="bg-white py-2">
                       {header.isPlaceholder
                         ? null
                         : flexRender(
@@ -729,9 +719,6 @@ export default function FundStatementTable({
               )}
             </TableBody>
           </Table>
-        </div>
-
-      
       </div>
     </div>
   );

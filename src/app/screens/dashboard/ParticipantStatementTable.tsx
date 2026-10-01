@@ -18,22 +18,30 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 import TextFilterPopover, {
   TextFilterValue,
 } from "@/components/common/TextFilterPopover";
-import Pagination from "@/components/common/Pagination";
-import { Filter, FileSpreadsheet, FileText, Search, X } from "lucide-react";
+import { FileSpreadsheet, FileText } from "lucide-react";
 
 interface ParticipantStatementTableProps {
   data: ParticipantStatementItem[];
   isLoading?: boolean;
+  maxHeight?: string;
+  className?: string;
 }
 
 // Accessor functions
+function truncateText(str: string, maxLen: number = 40): string {
+  if (!str || str.length <= maxLen) return str;
+  return `${str.slice(0, maxLen)}...`;
+}
+
 function getItemName(item: ParticipantStatementItem): string {
   const val =
     item.transactionCodeDesc ??
@@ -149,6 +157,8 @@ const numericMultiSelectFilterFn: FilterFn<ParticipantStatementItem> = (
 export default function ParticipantStatementTable({
   data = [],
   isLoading = false,
+  maxHeight = "max-h-[50vh] xl:max-h-[calc(100vh-340px)]",
+  className,
 }: ParticipantStatementTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -208,7 +218,6 @@ export default function ParticipantStatementTable({
         header: ({ column }) => {
           const isSorted = column.getIsSorted();
           const filterValue = column.getFilterValue() as TextFilterValue | null;
-          const isFiltered = !!(filterValue && filterValue.value);
 
           return (
             <div className="flex items-center justify-between gap-1 py-1">
@@ -230,11 +239,17 @@ export default function ParticipantStatementTable({
             </div>
           );
         },
-        cell: ({ row }) => (
-          <span className="font-medium text-[13px] text-slate-700 hover:text-blue-600 cursor-pointer">
-            {getItemName(row.original)}
-          </span>
-        ),
+        cell: ({ row }) => {
+          const name = getItemName(row.original);
+          return (
+            <span
+              className="font-medium text-[13px] text-slate-700 hover:text-blue-600 cursor-pointer block truncate max-w-[260px]"
+              title={name}
+            >
+              {truncateText(name, 40)}
+            </span>
+          );
+        },
       },
       {
         id: "mtd",
@@ -242,12 +257,6 @@ export default function ParticipantStatementTable({
         filterFn: numericMultiSelectFilterFn,
         header: ({ column }) => {
           const isSorted = column.getIsSorted();
-          const filterValue = column.getFilterValue() as number[] | null;
-          const isFiltered = !!(
-            filterValue &&
-            filterValue.length > 0 &&
-            filterValue.length < uniqueMTD.length
-          );
 
           return (
             <div className="flex items-center justify-end gap-1 py-1">
@@ -257,7 +266,7 @@ export default function ParticipantStatementTable({
                   else if (isSorted === "asc") column.toggleSorting(true);
                   else column.clearSorting();
                 }}
-                className={`font-bold text-xs sm:text-[12px]  tracking-wider transition-colors cursor-pointer select-none py-0.5 rounded ${
+                className={`font-bold text-xs sm:text-[12px] tracking-wider transition-colors cursor-pointer select-none py-0.5 rounded ${
                   isSorted
                     ? "text-blue-600 font-bold"
                     : "text-slate-900 hover:text-blue-600"
@@ -281,12 +290,6 @@ export default function ParticipantStatementTable({
         filterFn: numericMultiSelectFilterFn,
         header: ({ column }) => {
           const isSorted = column.getIsSorted();
-          const filterValue = column.getFilterValue() as number[] | null;
-          const isFiltered = !!(
-            filterValue &&
-            filterValue.length > 0 &&
-            filterValue.length < uniqueYTD.length
-          );
 
           return (
             <div className="flex items-center justify-end gap-1 py-1">
@@ -296,7 +299,7 @@ export default function ParticipantStatementTable({
                   else if (isSorted === "asc") column.toggleSorting(true);
                   else column.clearSorting();
                 }}
-                className={`font-bold text-xs sm:text-[12px]  tracking-wider transition-colors cursor-pointer select-none py-0.5 rounded ${
+                className={`font-bold text-xs sm:text-[12px] tracking-wider transition-colors cursor-pointer select-none py-0.5 rounded ${
                   isSorted
                     ? "text-blue-600 font-bold"
                     : "text-slate-900 hover:text-blue-600"
@@ -338,10 +341,18 @@ export default function ParticipantStatementTable({
 
   const handleExportCSV = () => {
     const rows = table.getFilteredRowModel().rows;
-    if (rows.length === 0) return;
+    if (rows.length === 0 && !beginningBalanceItem && !endingBalanceItem)
+      return;
 
     const headers = ["Activity Item", "MTD", "YTD"];
     const csvLines = [headers.join(",")];
+
+    if (beginningBalanceItem) {
+      const item = `"${getItemName(beginningBalanceItem).replace(/"/g, '""')}"`;
+      const mtd = getMTD(beginningBalanceItem);
+      const ytd = getYTD(beginningBalanceItem);
+      csvLines.push([item, mtd, ytd].join(","));
+    }
 
     rows.forEach((r) => {
       const item = `"${getItemName(r.original).replace(/"/g, '""')}"`;
@@ -349,6 +360,13 @@ export default function ParticipantStatementTable({
       const ytd = getYTD(r.original);
       csvLines.push([item, mtd, ytd].join(","));
     });
+
+    if (endingBalanceItem) {
+      const item = `"${getItemName(endingBalanceItem).replace(/"/g, '""')}"`;
+      const mtd = getMTD(endingBalanceItem);
+      const ytd = getYTD(endingBalanceItem);
+      csvLines.push([item, mtd, ytd].join(","));
+    }
 
     const blob = new Blob([csvLines.join("\n")], {
       type: "text/csv;charset=utf-8;",
@@ -370,30 +388,26 @@ export default function ParticipantStatementTable({
   };
 
   return (
-    <div className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col justify-between h-full space-y-4">
+    <div
+      className={cn(
+        "bg-white p-2 sm:p-2 rounded-lg border border-slate-200/80 shadow-xs flex flex-col justify-between h-full space-y-4",
+        className,
+      )}
+    >
       {/* Table Top Header: Title & Export Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1 pt-1">
         <div>
-          <h4 className="text-md  sm:text-sm font-semibold text-slate-900 tracking-tight">
+          <h4 className="text-md sm:text-sm font-semibold text-slate-900 tracking-tight">
             Portfolio Statement
           </h4>
         </div>
 
         <div className="flex items-center gap-3">
-          {/* Global Search Input */}
-          {/* <SearchBar
-            value={globalFilter ?? ""}
-            onChange={setGlobalFilter}
-            placeholder="Search statement..."
-            className="w-44 sm:w-52"
-            size="sm"
-          /> */}
-
           {/* Export Icons */}
           <div className="flex items-center gap-2">
             <button
               onClick={handleExportCSV}
-              className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition-colors shadow-xs"
+              className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition-colors shadow-xs cursor-pointer"
               title="Export to Excel / CSV"
             >
               <div className="relative flex items-center justify-center">
@@ -406,7 +420,7 @@ export default function ParticipantStatementTable({
 
             <button
               onClick={handleExportPDF}
-              className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition-colors shadow-xs"
+              className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition-colors shadow-xs cursor-pointer"
               title="Export to PDF"
             >
               <div className="relative flex items-center justify-center">
@@ -420,135 +434,111 @@ export default function ParticipantStatementTable({
         </div>
       </div>
 
-      {/* Beginning & Ending Balance Summary Cards */}
-      {(beginningBalanceItem || endingBalanceItem) && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 px-1">
-          <div className="flex items-center justify-between p-3 bg-slate-50/80 border border-slate-200/80 rounded-xl shadow-2xs">
-            <div>
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                Beginning Balance
-              </span>
-              {/* <div className="text-slate-800 font-bold text-xs mt-0.5">
-                {beginningBalanceItem
-                  ? getItemName(beginningBalanceItem)
-                  : "Beginning Balance"}
-              </div> */}
-            </div>
-            <div className="text-right text-xs">
-              <div className="font-bold text-slate-700">
-                MTD:{" "}
-                {beginningBalanceItem
-                  ? renderFormattedCurrency(getMTD(beginningBalanceItem))
-                  : "$0.00"}
-              </div>
-              <div className="font-semibold text-slate-600 mt-0.5">
-                YTD:{" "}
-                {beginningBalanceItem
-                  ? renderFormattedCurrency(getYTD(beginningBalanceItem))
-                  : "$0.00"}
-              </div>
-            </div>
-          </div>
+      {/* Main Table Container */}
+      <div className="bg-white rounded-lg border border-slate-200 shadow-xs overflow-hidden flex-1 flex flex-col justify-between">
+        <Table containerClassName={cn("overflow-y-auto relative", maxHeight)}>
+          <TableHeader className="sticky top-0 z-30 bg-white shadow-2xs border-b border-slate-200">
+            {/* Column Headers */}
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow
+                key={headerGroup.id}
+                className="hover:bg-transparent border-b border-slate-200 bg-white"
+              >
+                {headerGroup.headers.map((header) => (
+                  <TableHead key={header.id} className="bg-white py-2">
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )}
+                  </TableHead>
+                ))}
+              </TableRow>
+            ))}
 
-          <div className="flex items-center justify-between p-3 bg-slate-50/80 border border-slate-200/80 rounded-xl shadow-2xs">
-            <div>
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                Ending Balance
-              </span>
-              {/* <div className="text-slate-800 font-bold text-xs mt-0.5">
-                {endingBalanceItem
-                  ? getItemName(endingBalanceItem)
-                  : "Ending Balance"}
-              </div> */}
-            </div>
-            <div className="text-right text-xs">
-              <div className="font-bold text-slate-700">
-                MTD:{" "}
-                {endingBalanceItem
-                  ? renderFormattedCurrency(getMTD(endingBalanceItem))
-                  : "$0.00"}
-              </div>
-              <div className="font-semibold text-slate-600 mt-0.5">
-                YTD:{" "}
-                {endingBalanceItem
-                  ? renderFormattedCurrency(getYTD(endingBalanceItem))
-                  : "$0.00"}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+            {/* Static Top Row: Beginning Balance */}
+            {beginningBalanceItem && (
+              <TableRow className="bg-slate-100 font-bold border-b-2 border-slate-200 hover:bg-slate-100 transition-colors">
+                <TableCell className="font-bold text-[13px] text-slate-900 py-2.5 bg-slate-100">
+                  {getItemName(beginningBalanceItem)}
+                </TableCell>
+                <TableCell className="text-right text-[13px] font-bold py-2.5 bg-slate-100">
+                  {renderFormattedCurrency(getMTD(beginningBalanceItem))}
+                </TableCell>
+                <TableCell className="text-right text-[13px] font-bold py-2.5 bg-slate-100">
+                  {renderFormattedCurrency(getYTD(beginningBalanceItem))}
+                </TableCell>
+              </TableRow>
+            )}
+          </TableHeader>
 
-      {/* Main Table Card */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden flex-1 flex flex-col justify-between">
-        <div className="max-h-[250px] overflow-y-auto overflow-x-auto">
-          <Table>
-            <TableHeader className="sticky top-0 bg-white z-10 shadow-xs border-b border-slate-200">
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id} className="hover:bg-transparent">
-                  {headerGroup.headers.map((header) => (
-                    <TableHead key={header.id} className="bg-white">
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext(),
-                          )}
-                    </TableHead>
-                  ))}
-                </TableRow>
-              ))}
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={columns.length}
-                    className="h-44 text-center"
+          <TableBody>
+            {isLoading ? (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-36 text-center"
+                >
+                  <div className="flex items-center justify-center gap-2 text-slate-500">
+                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-slate-300 border-t-blue-600" />
+                    <span>Loading statement...</span>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : table.getRowModel().rows.length === 0 ? (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center text-slate-500 text-xs font-medium"
+                >
+                  No activity items
+                </TableCell>
+              </TableRow>
+            ) : (
+              table.getRowModel().rows.map((row, idx) => {
+                const isSelected = selectedRowIndex === idx;
+                return (
+                  <TableRow
+                    key={row.id}
+                    onClick={() => setSelectedRowIndex(idx)}
+                    className={`cursor-pointer transition-colors ${
+                      isSelected
+                        ? "bg-sky-50/80 border-sky-200 font-medium"
+                        : "hover:bg-slate-50/80"
+                    }`}
                   >
-                    <div className="flex items-center justify-center gap-2 text-slate-500">
-                      <div className="h-5 w-5 animate-spin rounded-full border-2 border-slate-300 border-t-blue-600" />
-                      <span>Loading statement...</span>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ) : table.getRowModel().rows.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={columns.length}
-                    className="h-28 text-center text-slate-500 text-xs font-medium"
-                  >
-                    No data available
-                  </TableCell>
-                </TableRow>
-              ) : (
-                table.getRowModel().rows.map((row, idx) => {
-                  const isSelected = selectedRowIndex === idx;
-                  return (
-                    <TableRow
-                      key={row.id}
-                      onClick={() => setSelectedRowIndex(idx)}
-                      className={`cursor-pointer transition-colors ${
-                        isSelected
-                          ? "bg-sky-50/80 border-sky-200 font-medium"
-                          : "hover:bg-slate-50/80"
-                      }`}
-                    >
-                      {row.getVisibleCells().map((cell) => (
-                        <TableCell key={cell.id}>
-                          {flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext(),
-                          )}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  );
-                })
-              )}
-            </TableBody>
-          </Table>
-        </div>
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id} className="py-2">
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                );
+              })
+            )}
+          </TableBody>
+
+          {/* Static Bottom Row: Ending Balance */}
+          {endingBalanceItem && (
+            <TableFooter className="sticky bottom-0 z-30 bg-slate-100 border-t-2 border-slate-300 shadow-2xs">
+              <TableRow className="hover:bg-transparent font-bold bg-slate-100">
+                <TableCell className="font-bold text-[13px] text-slate-900 py-2.5 bg-slate-100">
+                  {getItemName(endingBalanceItem)}
+                </TableCell>
+                <TableCell className="text-right text-[13px] font-bold py-2.5 bg-slate-100">
+                  {renderFormattedCurrency(getMTD(endingBalanceItem))}
+                </TableCell>
+                <TableCell className="text-right text-[13px] font-bold py-2.5 bg-slate-100">
+                  {renderFormattedCurrency(getYTD(endingBalanceItem))}
+                </TableCell>
+              </TableRow>
+            </TableFooter>
+          )}
+        </Table>
       </div>
     </div>
   );

@@ -111,6 +111,20 @@ export default function DashboardPage() {
     return `${val.toFixed(2)}%`;
   };
 
+  const getValueClass = (val?: number) => {
+    if (val !== undefined && val !== null && val < 0) {
+      return "font-bold text-rose-600 text-lg sm:text-xl";
+    }
+    return "font-bold text-slate-900 text-lg sm:text-xl";
+  };
+
+  const getSubValueClass = (val?: number) => {
+    if (val !== undefined && val !== null && val < 0) {
+      return "font-semibold text-rose-600";
+    }
+    return "text-slate-500 font-medium";
+  };
+
   return (
     <div className="space-y-4">
       {/* Welcome Header with User Name & Matrix Cards */}
@@ -146,11 +160,14 @@ export default function DashboardPage() {
                 <div className="h-6 w-28 bg-slate-200 animate-pulse rounded" />
               ) : (
                 <>
-                  <div className="font-bold text-slate-900 text-lg sm:text-xl">
+                  <div className={getValueClass(netActivity?.marketValue)}>
                     {formatCurrency(netActivity?.marketValue)}
                   </div>
                   <p className="font-medium text-[11px] text-slate-500 mt-0.5">
-                    YTD Begin: {formatCurrency(netActivity?.ytdBeginBalance)}
+                    YTD Begin:{" "}
+                    <span className={getSubValueClass(netActivity?.ytdBeginBalance)}>
+                      {formatCurrency(netActivity?.ytdBeginBalance)}
+                    </span>
                   </p>
                 </>
               )}
@@ -173,7 +190,7 @@ export default function DashboardPage() {
                 <div className="h-6 w-28 bg-slate-200 animate-pulse rounded" />
               ) : (
                 <>
-                  <div className="font-bold text-slate-900 text-lg sm:text-xl">
+                  <div className={getValueClass(netActivity?.activity)}>
                     {formatCurrency(netActivity?.activity)}
                   </div>
                   <p className="font-medium text-[11px] text-slate-500 mt-0.5">
@@ -200,7 +217,7 @@ export default function DashboardPage() {
                 <div className="h-6 w-28 bg-slate-200 animate-pulse rounded" />
               ) : (
                 <>
-                  <div className="font-bold text-slate-900 text-lg sm:text-xl">
+                  <div className={getValueClass(netActivity?.gainLoss)}>
                     {formatCurrency(netActivity?.gainLoss)}
                   </div>
                   <p className="font-medium text-[11px] text-slate-500 mt-0.5">
@@ -227,7 +244,7 @@ export default function DashboardPage() {
                 <div className="h-6 w-28 bg-slate-200 animate-pulse rounded" />
               ) : (
                 <>
-                  <div className="font-bold text-slate-900 text-lg sm:text-xl">
+                  <div className={getValueClass(netActivity?.rateOfReturn)}>
                     {formatPercent(netActivity?.rateOfReturn)}
                   </div>
                   <p className="font-medium text-[11px] text-slate-500 mt-0.5">
