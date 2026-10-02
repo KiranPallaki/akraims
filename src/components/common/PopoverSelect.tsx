@@ -66,7 +66,7 @@ export default function PopoverSelect({
           type="button"
           disabled={disabled}
           className={cn(
-            "flex h-9 w-full min-w-0 items-center justify-between rounded-md border border-slate-300 bg-white px-3 py-2 text-xs sm:text-[12px] text-slate-800 shadow-2xs transition-colors hover:bg-slate-50/80 focus:border-portal-navy focus:outline-none disabled:cursor-not-allowed disabled:opacity-50",
+            "flex h-7 w-full min-w-0 items-center justify-between rounded-md border border-slate-300 bg-white px-3 py-2 text-xs sm:text-[12px] text-slate-800 shadow-2xs transition-colors hover:bg-slate-50/80 focus:border-portal-navy focus:outline-none disabled:cursor-not-allowed disabled:opacity-50",
             className,
           )}
         >

@@ -93,11 +93,11 @@ export default function AddTransactionForm({
       hasFee: initialValues?.hasFee || false,
       amount: formatAmountWithCommas(initialValues?.amount || ""),
       reEnterAmount: formatAmountWithCommas(
-        initialValues?.reEnterAmount || initialValues?.amount || ""
+        initialValues?.reEnterAmount || initialValues?.amount || "",
       ),
       units: calculateTransactionUnits(
         initialValues?.amount || "",
-        initialValues?.fundPrice || "0"
+        initialValues?.fundPrice || "0",
       ),
       balance: initialValues?.balance || "$0.00",
       notes: initialValues?.notes || "",
@@ -128,10 +128,20 @@ export default function AddTransactionForm({
         fundPriceStr,
       ]) => {
         // PDF Section 3 Validation: Participant & Amount are both required
-        const strParticipant = typeof participantName === "string" ? participantName : String(participantName ?? "");
-        const strAmount = typeof amount === "string" ? amount : String(amount ?? "");
-        const strReEnterAmount = typeof reEnterAmount === "string" ? reEnterAmount : String(reEnterAmount ?? "");
-        const strFundPrice = typeof fundPriceStr === "string" ? fundPriceStr : String(fundPriceStr ?? "");
+        const strParticipant =
+          typeof participantName === "string"
+            ? participantName
+            : String(participantName ?? "");
+        const strAmount =
+          typeof amount === "string" ? amount : String(amount ?? "");
+        const strReEnterAmount =
+          typeof reEnterAmount === "string"
+            ? reEnterAmount
+            : String(reEnterAmount ?? "");
+        const strFundPrice =
+          typeof fundPriceStr === "string"
+            ? fundPriceStr
+            : String(fundPriceStr ?? "");
 
         const isParticipantMissing = !strParticipant.trim();
         const isAmountMissing = !strAmount.trim();
@@ -165,7 +175,10 @@ export default function AddTransactionForm({
             {/* API Error Response Banner */}
             {apiErrorMessage && (
               <div className="flex items-start gap-2.5 rounded-md bg-rose-50 border border-rose-200 p-3 text-xs sm:text-sm text-rose-800 shadow-2xs">
-                <AlertCircle size={18} className="shrink-0 text-rose-600 mt-0.5" />
+                <AlertCircle
+                  size={18}
+                  className="shrink-0 text-rose-600 mt-0.5"
+                />
                 <div className="flex-1 font-semibold leading-relaxed whitespace-pre-wrap">
                   {apiErrorMessage}
                 </div>
@@ -193,7 +206,7 @@ export default function AddTransactionForm({
             )}
 
             {/* 2-Column Grid Layout */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-[58%_40%] gap-x-4 gap-y-3">
               {/* LEFT COLUMN */}
               <div className="space-y-3">
                 {/* Participant Dropdown */}
@@ -231,14 +244,21 @@ export default function AddTransactionForm({
                               // Auto-update available funds & fund price for selected participant
                               const matchingFunds =
                                 participantFundBalances.filter(
-                                  (item) => item.participantName === selectedPart
+                                  (item) =>
+                                    item.participantName === selectedPart,
                                 );
                               if (matchingFunds.length > 0) {
                                 if (matchingFunds[0].participantID) {
-                                  form.setFieldValue("participantID", matchingFunds[0].participantID);
+                                  form.setFieldValue(
+                                    "participantID",
+                                    matchingFunds[0].participantID,
+                                  );
                                 }
                                 if (matchingFunds[0].fundID) {
-                                  form.setFieldValue("fundID", matchingFunds[0].fundID);
+                                  form.setFieldValue(
+                                    "fundID",
+                                    matchingFunds[0].fundID,
+                                  );
                                 }
                                 const firstFund =
                                   matchingFunds[0].fundName ||
@@ -247,15 +267,16 @@ export default function AddTransactionForm({
                                 form.setFieldValue("fund", firstFund);
                                 const price = matchingFunds[0].fundPrice;
                                 if (price !== undefined) {
-                                  form.setFieldValue(
-                                    "fundPrice",
-                                    `$${price}`
-                                  );
-                                  const currentAmt = form.getFieldValue("amount");
+                                  form.setFieldValue("fundPrice", `$${price}`);
+                                  const currentAmt =
+                                    form.getFieldValue("amount");
                                   if (currentAmt) {
                                     form.setFieldValue(
                                       "units",
-                                      calculateTransactionUnits(currentAmt, price)
+                                      calculateTransactionUnits(
+                                        currentAmt,
+                                        price,
+                                      ),
                                     );
                                   }
                                 }
@@ -267,8 +288,8 @@ export default function AddTransactionForm({
                                       {
                                         style: "currency",
                                         currency: "USD",
-                                      }
-                                    )
+                                      },
+                                    ),
                                   );
                                 }
                               }
@@ -291,7 +312,7 @@ export default function AddTransactionForm({
                   name="fund"
                   children={(field) => {
                     const filteredFunds = participantFundBalances.filter(
-                      (item) => item.participantName === participantName
+                      (item) => item.participantName === participantName,
                     );
                     const options: PopoverSelectOption[] =
                       filteredFunds.length > 0
@@ -322,36 +343,46 @@ export default function AddTransactionForm({
                                 (item) =>
                                   item.participantName === participantName &&
                                   (item.fundName === selectedFundName ||
-                                    item.fund === selectedFundName)
+                                    item.fund === selectedFundName),
                               );
                               if (matchingItem) {
                                 if (matchingItem.participantID) {
-                                  form.setFieldValue("participantID", matchingItem.participantID);
+                                  form.setFieldValue(
+                                    "participantID",
+                                    matchingItem.participantID,
+                                  );
                                 }
                                 if (matchingItem.fundID) {
-                                  form.setFieldValue("fundID", matchingItem.fundID);
+                                  form.setFieldValue(
+                                    "fundID",
+                                    matchingItem.fundID,
+                                  );
                                 }
                                 const price = matchingItem.fundPrice;
                                 if (price !== undefined) {
-                                  form.setFieldValue(
-                                    "fundPrice",
-                                    `$${price}`
-                                  );
-                                  const currentAmt = form.getFieldValue("amount");
+                                  form.setFieldValue("fundPrice", `$${price}`);
+                                  const currentAmt =
+                                    form.getFieldValue("amount");
                                   if (currentAmt) {
                                     form.setFieldValue(
                                       "units",
-                                      calculateTransactionUnits(currentAmt, price)
+                                      calculateTransactionUnits(
+                                        currentAmt,
+                                        price,
+                                      ),
                                     );
                                   }
                                 }
                                 if (matchingItem.balance !== undefined) {
                                   form.setFieldValue(
                                     "balance",
-                                    matchingItem.balance.toLocaleString("en-US", {
-                                      style: "currency",
-                                      currency: "USD",
-                                    })
+                                    matchingItem.balance.toLocaleString(
+                                      "en-US",
+                                      {
+                                        style: "currency",
+                                        currency: "USD",
+                                      },
+                                    ),
                                   );
                                 }
                               }
@@ -371,8 +402,10 @@ export default function AddTransactionForm({
                     const options: PopoverSelectOption[] =
                       transactionCodeList.length > 0
                         ? transactionCodeList.map((item) => ({
-                            value: item.transactionCodeDesc || item.transactionCode,
-                            label: item.transactionCodeDesc || item.transactionCode,
+                            value:
+                              item.transactionCodeDesc || item.transactionCode,
+                            label:
+                              item.transactionCodeDesc || item.transactionCode,
                             sublabel:
                               item.transactionCode &&
                               item.transactionCodeDesc !== item.transactionCode
@@ -394,10 +427,15 @@ export default function AddTransactionForm({
                             onChange={(val) => {
                               field.handleChange(val);
                               const codeItem = transactionCodeList.find(
-                                (item) => (item.transactionCodeDesc || item.transactionCode) === val
+                                (item) =>
+                                  (item.transactionCodeDesc ||
+                                    item.transactionCode) === val,
                               );
                               if (codeItem) {
-                                form.setFieldValue("transactionCode", codeItem.transactionCode);
+                                form.setFieldValue(
+                                  "transactionCode",
+                                  codeItem.transactionCode,
+                                );
                               }
                             }}
                             onBlur={field.handleBlur}
@@ -417,7 +455,7 @@ export default function AddTransactionForm({
                         (item) => ({
                           value: String(item.recipientID),
                           label: item.recipientName,
-                        })
+                        }),
                       );
 
                       return (
@@ -453,7 +491,7 @@ export default function AddTransactionForm({
                           type="text"
                           readOnly
                           value={field.state.value}
-                          className="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs sm:text-sm font-semibold text-slate-700 focus:outline-none"
+                          className="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-1 text-[12px] sm:text-[12px] font-semibold text-slate-700 focus:outline-none"
                         />
                       </div>
                     </div>
@@ -479,7 +517,7 @@ export default function AddTransactionForm({
                           value={field.state.value}
                           onChange={(e) => field.handleChange(e.target.value)}
                           onBlur={field.handleBlur}
-                          className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-xs sm:text-sm text-slate-800 shadow-2xs focus:border-portal-navy focus:outline-none"
+                          className="w-full rounded-md border border-slate-300 bg-white px-3 py-1 text-[12px] sm:text-[12px] text-slate-800 shadow-2xs focus:border-portal-navy focus:outline-none"
                         />
                         {field.state.meta.errors ? (
                           <em className="text-[11px] text-rose-500 mt-0.5 block">
@@ -491,20 +529,24 @@ export default function AddTransactionForm({
                   )}
                 />
 
-                {/* PDF Page 5: Has Fees Checkbox */}
                 <form.Field
-                  name="hasFee"
+                  name="notes"
                   children={(field) => (
-                    <div className="flex items-center gap-3 pt-1 min-w-0">
-                      <label className="font-medium text-[12px] text-slate-700 w-32 shrink-0">
-                        Has Fee
+                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 min-w-0">
+                      <label className="font-medium text-[12px] text-slate-700 w-32 shrink-0 pt-2">
+                        Notes
                       </label>
-                      <input
-                        type="checkbox"
-                        checked={field.state.value}
-                        onChange={(e) => field.handleChange(e.target.checked)}
-                        className="h-4 w-4 rounded border-slate-300 text-portal-navy focus:ring-portal-navy cursor-pointer"
-                      />
+                      <div className="flex-1 min-w-0 w-full">
+                        <textarea
+                          rows={3}
+                          name={field.name}
+                          value={field.state.value}
+                          onChange={(e) => field.handleChange(e.target.value)}
+                          onBlur={field.handleBlur}
+                          placeholder="Notes"
+                          className="w-full rounded-md border border-slate-300 bg-white px-2 py-1 text-[12px] sm:text-12px text-slate-800 shadow-2xs focus:border-portal-navy focus:outline-none"
+                        />
+                      </div>
                     </div>
                   )}
                 />
@@ -531,19 +573,21 @@ export default function AddTransactionForm({
                           name={field.name}
                           value={field.state.value}
                           onChange={(e) => {
-                            const formattedVal = formatAmountWithCommas(e.target.value);
+                            const formattedVal = formatAmountWithCommas(
+                              e.target.value,
+                            );
                             field.handleChange(formattedVal);
 
                             // PDF Page 4: Calculate Units (6 decimals & US commas)
                             const calculatedUnits = calculateTransactionUnits(
                               formattedVal,
-                              strFundPrice
+                              strFundPrice,
                             );
                             form.setFieldValue("units", calculatedUnits);
                           }}
                           onBlur={field.handleBlur}
                           placeholder="Transaction Amount"
-                          className={`w-full rounded-md border px-3 py-2 text-xs sm:text-sm text-slate-800 shadow-2xs focus:border-portal-navy focus:outline-none ${
+                          className={`w-full rounded-md border px-3 py-1 text-[12px] sm:text-12px text-slate-800 shadow-2xs focus:border-portal-navy focus:outline-none ${
                             field.state.meta.errors
                               ? "border-rose-300 bg-rose-50/20"
                               : "border-slate-300 bg-white"
@@ -574,12 +618,14 @@ export default function AddTransactionForm({
                           name={field.name}
                           value={field.state.value}
                           onChange={(e) => {
-                            const formattedVal = formatAmountWithCommas(e.target.value);
+                            const formattedVal = formatAmountWithCommas(
+                              e.target.value,
+                            );
                             field.handleChange(formattedVal);
                           }}
                           onBlur={field.handleBlur}
                           placeholder="Re-enter Amount"
-                          className={`w-full rounded-md border px-3 py-2 text-xs sm:text-sm text-slate-800 shadow-2xs focus:border-portal-navy focus:outline-none ${
+                          className={`w-full rounded-md border px-3 py-1 text-[12px] sm:text-12px text-slate-800 shadow-2xs focus:border-portal-navy focus:outline-none ${
                             validateAmount
                               ? "border-amber-400 bg-amber-50/20 focus:border-amber-500"
                               : "border-slate-300 bg-white"
@@ -605,7 +651,7 @@ export default function AddTransactionForm({
                           name={field.name}
                           value={field.state.value}
                           placeholder="0.000000"
-                          className="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs sm:text-sm font-semibold text-slate-700 focus:outline-none"
+                          className="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-1 text-[12px] sm:text-12px font-semibold text-slate-700 focus:outline-none"
                         />
                       </div>
                     </div>
@@ -625,30 +671,7 @@ export default function AddTransactionForm({
                           type="text"
                           readOnly
                           value={field.state.value}
-                          className="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs sm:text-sm font-semibold text-slate-700 focus:outline-none"
-                        />
-                      </div>
-                    </div>
-                  )}
-                />
-
-                {/* Notes */}
-                <form.Field
-                  name="notes"
-                  children={(field) => (
-                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 min-w-0">
-                      <label className="font-medium text-[12px] text-slate-700 w-32 shrink-0 pt-2">
-                        Notes
-                      </label>
-                      <div className="flex-1 min-w-0 w-full">
-                        <textarea
-                          rows={3}
-                          name={field.name}
-                          value={field.state.value}
-                          onChange={(e) => field.handleChange(e.target.value)}
-                          onBlur={field.handleBlur}
-                          placeholder="Notes"
-                          className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-xs sm:text-sm text-slate-800 shadow-2xs focus:border-portal-navy focus:outline-none"
+                          className="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-1 text-[12px] sm:text-12px font-semibold text-slate-700 focus:outline-none"
                         />
                       </div>
                     </div>
@@ -670,16 +693,37 @@ export default function AddTransactionForm({
                           disabled={!hasFee}
                           name={field.name}
                           value={field.state.value}
-                          onChange={(e) => field.handleChange(formatAmountWithCommas(e.target.value))}
+                          onChange={(e) =>
+                            field.handleChange(
+                              formatAmountWithCommas(e.target.value),
+                            )
+                          }
                           onBlur={field.handleBlur}
                           placeholder="Fee Amount"
-                          className={`w-full rounded-md border px-3 py-2 text-xs sm:text-sm transition-colors ${
+                          className={`w-full rounded-md border px-3 py-1 text-[12px] sm:text-[12px] transition-colors ${
                             hasFee
                               ? "border-slate-300 bg-white text-slate-800 shadow-2xs focus:border-portal-navy focus:outline-none"
                               : "border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed"
                           }`}
                         />
                       </div>
+                    </div>
+                  )}
+                />
+                {/* PDF Page 5: Has Fees Checkbox */}
+                <form.Field
+                  name="hasFee"
+                  children={(field) => (
+                    <div className="flex items-center gap-3 pt-1 min-w-0">
+                      <label className="font-medium text-[12px] text-slate-700 w-32 shrink-0">
+                        Has Fee
+                      </label>
+                      <input
+                        type="checkbox"
+                        checked={field.state.value}
+                        onChange={(e) => field.handleChange(e.target.checked)}
+                        className="h-4 w-4 rounded border-slate-300 text-portal-navy focus:ring-portal-navy cursor-pointer"
+                      />
                     </div>
                   )}
                 />
@@ -712,8 +756,8 @@ export default function AddTransactionForm({
                     ? "Updating..."
                     : "Submitting..."
                   : isEditing
-                  ? "Update"
-                  : "Submit"}
+                    ? "Update"
+                    : "Submit"}
               </button>
             </div>
           </form>

@@ -71,16 +71,16 @@ function LoginPageContent() {
           <span className="text-sm">Back to Home</span>
         </Link>
         <div className="my-auto ">
-          <div className="pb-2 ">
+          <div className=" ">
             <Image
               alt="AKRA LOGO"
-              height={52}
-              src="/AKRA_JPEG_LOGO_250-250.jpg"
-              style={{ height: "auto", backgroundColor: "white" }}
-              width={110}
+              height={42}
+              src="/AKRALOGO.png"
+              style={{ height: "auto" }}
+              width={90}
             />
           </div>
-          <h1 className="mt-6 font-semibold text-3xl leading-tight tracking-tight">
+          <h1 className="mt-2 font-semibold text-3xl leading-tight tracking-tight">
             Welcome back
           </h1>
           <p className="mt-3 max-w-xs text-sm text-white/60 leading-relaxed">

@@ -57,17 +57,19 @@ export default function DashboardPage() {
     staleTime: 1000 * 60 * 5,
   });
 
-  const { data: participantBalances = [], isLoading: isParticipantLoading } = useQuery({
-    queryKey: ["dashboard", "participantBalances", clientID],
-    queryFn: () => fetchParticipantBalances(clientID),
-    staleTime: 1000 * 60 * 5,
-  });
+  const { data: participantBalances = [], isLoading: isParticipantLoading } =
+    useQuery({
+      queryKey: ["dashboard", "participantBalances", clientID],
+      queryFn: () => fetchParticipantBalances(clientID),
+      staleTime: 1000 * 60 * 5,
+    });
 
-  const { data: participantStatements = [], isLoading: isStatementLoading } = useQuery({
-    queryKey: ["dashboard", "participantStatement", clientID],
-    queryFn: () => fetchParticipantStatement(clientID),
-    staleTime: 1000 * 60 * 5,
-  });
+  const { data: participantStatements = [], isLoading: isStatementLoading } =
+    useQuery({
+      queryKey: ["dashboard", "participantStatement", clientID],
+      queryFn: () => fetchParticipantStatement(clientID),
+      staleTime: 1000 * 60 * 5,
+    });
 
   const { data: fundPerformance = [], isLoading: isPerfLoading } = useQuery({
     queryKey: ["dashboard", "fundPerformance", clientID],
@@ -75,11 +77,12 @@ export default function DashboardPage() {
     staleTime: 1000 * 60 * 5,
   });
 
-  const { data: fundStatements = [], isLoading: isFundStatementLoading } = useQuery({
-    queryKey: ["dashboard", "fundStatements", clientID],
-    queryFn: () => fetchFundStatementValues(clientID),
-    staleTime: 1000 * 60 * 5,
-  });
+  const { data: fundStatements = [], isLoading: isFundStatementLoading } =
+    useQuery({
+      queryKey: ["dashboard", "fundStatements", clientID],
+      queryFn: () => fetchFundStatementValues(clientID),
+      staleTime: 1000 * 60 * 5,
+    });
 
   const { data: perfHistory = [], isLoading: isPerfHistoryLoading } = useQuery({
     queryKey: ["dashboard", "perfHistory", clientID],
@@ -165,7 +168,9 @@ export default function DashboardPage() {
                   </div>
                   <p className="font-medium text-[11px] text-slate-500 mt-0.5">
                     YTD Begin:{" "}
-                    <span className={getSubValueClass(netActivity?.ytdBeginBalance)}>
+                    <span
+                      className={getSubValueClass(netActivity?.ytdBeginBalance)}
+                    >
                       {formatCurrency(netActivity?.ytdBeginBalance)}
                     </span>
                   </p>

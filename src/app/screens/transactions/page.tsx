@@ -29,6 +29,7 @@ import PendingTransactionsTab from "./components/PendingTransactionsTab";
 import AddTransactionForm from "./components/AddTransactionForm";
 import DeleteTransactionModal from "./components/DeleteTransactionModal";
 import { FileSpreadsheet, FileText, RotateCw, Plus, X } from "lucide-react";
+import { exportTableToPDF } from "@/lib/pdfExport";
 
 export default function TransactionsPage() {
   const [client, setClient] = useState<Client | null>(null);
@@ -37,7 +38,7 @@ export default function TransactionsPage() {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedRowIndex, setSelectedRowIndex] = useState<number | null>(null);
   const [addedItems, setAddedItems] = useState<TransactionsTransactionItem[]>(
-    []
+    [],
   );
   const [deletedTxnIds, setDeletedTxnIds] = useState<(number | string)[]>([]);
   const [editingTxn, setEditingTxn] =
@@ -70,7 +71,7 @@ export default function TransactionsPage() {
     queryFn: async () => {
       const res = await fetchTransactionsData<TransactionsTransactionItem>(
         activeTab,
-        clientID
+        clientID,
       );
       return res.data;
     },
@@ -96,7 +97,7 @@ export default function TransactionsPage() {
     const combined = [...addedItems, ...fetchedData];
     if (deletedTxnIds.length === 0) return combined;
     return combined.filter(
-      (item) => !deletedTxnIds.includes(item.transactionID)
+      (item) => !deletedTxnIds.includes(item.transactionID),
     );
   }, [addedItems, fetchedData, deletedTxnIds]);
 
@@ -157,7 +158,7 @@ export default function TransactionsPage() {
       const notes = `"${(row.notes || "").replace(/"/g, '""')}"`;
 
       csvRows.push(
-        [id, name, fund, code, date, amt, units, fee, notes].join(",")
+        [id, name, fund, code, date, amt, units, fee, notes].join(","),
       );
     });
 
@@ -169,7 +170,7 @@ export default function TransactionsPage() {
     link.href = url;
     link.setAttribute(
       "download",
-      `${activeTab}_${new Date().toISOString().slice(0, 10)}.csv`
+      `${activeTab}_${new Date().toISOString().slice(0, 10)}.csv`,
     );
     document.body.appendChild(link);
     link.click();
@@ -178,7 +179,50 @@ export default function TransactionsPage() {
 
   // PDF Export Handler
   const handleExportPDF = () => {
-    window.print();
+    if (filteredData.length === 0) return;
+    const headers = [
+      "ID",
+      "Participant Name",
+      "Fund",
+      "Code",
+      "Date",
+      "Amount",
+      "Units",
+      "Fee",
+      "Notes",
+    ];
+
+    const pdfRows = filteredData.map((row) => [
+      String(row.transactionID ?? ""),
+      row.participantName || row.accountName || "",
+      row.fund || row.fundName || "",
+      row.transactionCodeDesc || row.transactionCode || "",
+      (row.transactionDate || "").split("T")[0],
+      (row.transactionAmount ?? row.amount ?? 0).toLocaleString("en-US", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }),
+      row.transactionUnits !== undefined && row.transactionUnits !== null
+        ? String(row.transactionUnits)
+        : "",
+      (row.feeAmount ?? 0).toLocaleString("en-US", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }),
+      row.notes || "",
+    ]);
+
+    exportTableToPDF({
+      fileName: `${activeTab}_${new Date().toISOString().slice(0, 10)}.pdf`,
+      title:
+        activeTab === "Transactions"
+          ? "Transactions Report"
+          : "Pending Transactions Report",
+      subtitle: `AKRA IMS - ${activeTab}`,
+      headers,
+      rows: pdfRows,
+      orientation: "landscape",
+    });
   };
 
   // Form Submit Handler with Duplicate Check & Response Error Banner
@@ -201,9 +245,11 @@ export default function TransactionsPage() {
       const itemCode = item.transactionCodeDesc || item.transactionCode || "";
 
       return (
-        itemPart.trim().toLowerCase() === values.participantName.trim().toLowerCase() &&
+        itemPart.trim().toLowerCase() ===
+          values.participantName.trim().toLowerCase() &&
         itemFund.trim().toLowerCase() === values.fund.trim().toLowerCase() &&
-        itemCode.trim().toLowerCase() === values.transactionCodeDesc.trim().toLowerCase() &&
+        itemCode.trim().toLowerCase() ===
+          values.transactionCodeDesc.trim().toLowerCase() &&
         itemAmt === numAmt &&
         itemDate === dateStr
       );
@@ -212,7 +258,7 @@ export default function TransactionsPage() {
     if (isDuplicate) {
       setIsSubmitting(false);
       setFormApiError(
-        "Duplicate Transaction: A transaction with the exact same Participant, Fund, Transcode, Date, and Amount already exists."
+        "Duplicate Transaction: A transaction with the exact same Participant, Fund, Transcode, Date, and Amount already exists.",
       );
       return;
     }
@@ -223,12 +269,12 @@ export default function TransactionsPage() {
         editingTxn.transactionID,
         values,
         participantFundBalances,
-        transactionCodeList
+        transactionCodeList,
       );
       const res = await submitUpdateTransaction(
         editingTxn.transactionID,
         editPayload,
-        clientID
+        clientID,
       );
 
       if (!res.ok) {
@@ -256,15 +302,15 @@ export default function TransactionsPage() {
 
       setAddedItems((prev) =>
         prev.map((i) =>
-          i.transactionID === editingTxn.transactionID ? updatedItem : i
-        )
+          i.transactionID === editingTxn.transactionID ? updatedItem : i,
+        ),
       );
     } else {
       // PDF Section 1 & 2: Add Payload Construction & API Call
       const addPayload = buildAddTransactionPayload(
         values,
         participantFundBalances,
-        transactionCodeList
+        transactionCodeList,
       );
       const res = await submitAddTransaction(addPayload, clientID);
 
@@ -344,7 +390,7 @@ export default function TransactionsPage() {
         hasFee: editingTxn.hasFees === "Y" || (editingTxn.feeAmount ?? 0) > 0,
         amount: String(editingTxn.transactionAmount ?? editingTxn.amount ?? ""),
         reEnterAmount: String(
-          editingTxn.transactionAmount ?? editingTxn.amount ?? ""
+          editingTxn.transactionAmount ?? editingTxn.amount ?? "",
         ),
         units:
           editingTxn.transactionUnits !== null &&
@@ -409,8 +455,8 @@ export default function TransactionsPage() {
                 type="button"
               >
                 <div className="relative flex items-center justify-center">
-                  <FileSpreadsheet className="h-5 w-5 text-slate-700" />
-                  <span className="absolute text-[8px] font-black text-slate-900 right-0 bottom-0 bg-white px-0.5 rounded border border-slate-300">
+                  <FileSpreadsheet className="h-5 w-5 text-emerald-600" />
+                  <span className="absolute text-[8px] font-black text-emerald-600 right-0 bottom-0 bg-white">
                     X
                   </span>
                 </div>
@@ -423,8 +469,8 @@ export default function TransactionsPage() {
                 type="button"
               >
                 <div className="relative flex items-center justify-center">
-                  <FileText className="h-5 w-5 text-slate-700" />
-                  <span className="absolute text-[7px] font-black text-slate-900 -right-1 -bottom-0.5 bg-white px-0.5 rounded border border-slate-300">
+                  <FileText className="h-5 w-5 text-red-500" />
+                  <span className="absolute text-[7px] font-black text-red-500 -right-1 -bottom-0.5 bg-white  ">
                     PDF
                   </span>
                 </div>
@@ -492,7 +538,7 @@ export default function TransactionsPage() {
 
           <div className="fixed inset-y-0 right-0 max-w-full flex">
             {/* Drawer Container */}
-            <div className="w-screen max-w-3xl bg-white shadow-2xl transform transition-transform duration-300 ease-in-out border-l border-slate-200 flex flex-col overflow-y-auto">
+            <div className="w-screen max-w-3xl p-2 bg-white shadow-2xl transform transition-transform duration-300 ease-in-out border-l border-slate-200 flex flex-col overflow-y-auto">
               {/* Drawer Header */}
               <div className="flex items-center justify-between px-3 py-2 border-b border-slate-200 bg-slate-50/50">
                 <div>
@@ -515,7 +561,7 @@ export default function TransactionsPage() {
               </div>
 
               {/* Drawer Body - Reusable TanStack Form Component */}
-              <div className="p-3">
+              <div className="p-4">
                 <AddTransactionForm
                   initialValues={initialFormValues}
                   isEditing={!!editingTxn}

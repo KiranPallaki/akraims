@@ -27,7 +27,13 @@ import { cn } from "@/lib/utils";
 import TextFilterPopover, {
   TextFilterValue,
 } from "@/components/common/TextFilterPopover";
-import { FileSpreadsheet, FileText } from "lucide-react";
+import { FileSpreadsheet, FileText, EllipsisVertical } from "lucide-react";
+import { exportTableToPDF } from "@/lib/pdfExport";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 interface ParticipantStatementTableProps {
   data: ParticipantStatementItem[];
@@ -157,7 +163,7 @@ const numericMultiSelectFilterFn: FilterFn<ParticipantStatementItem> = (
 export default function ParticipantStatementTable({
   data = [],
   isLoading = false,
-  maxHeight = "max-h-[50vh] xl:max-h-[calc(100vh-340px)]",
+  maxHeight = "max-h-[28vh] xl:max-h-[calc(100vh-288px)]",
   className,
 }: ParticipantStatementTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -165,6 +171,7 @@ export default function ParticipantStatementTable({
   const [globalFilter, setGlobalFilter] = useState<string>("");
   const [selectedRowIndex, setSelectedRowIndex] = useState<number | null>(null);
   const [activePopoverCol, setActivePopoverCol] = useState<string | null>(null);
+  const [isExportOpen, setIsExportOpen] = useState<boolean>(false);
   const [pagination, setPagination] = useState({
     pageIndex: 0,
     pageSize: 5,
@@ -243,7 +250,7 @@ export default function ParticipantStatementTable({
           const name = getItemName(row.original);
           return (
             <span
-              className="font-medium text-[13px] text-slate-700 hover:text-blue-600 cursor-pointer block truncate max-w-[260px]"
+              className="font-medium text-[13px] text-slate-700 hover:text-blue-600 cursor-pointer block truncate max-w-[260px] pl-4"
               title={name}
             >
               {truncateText(name, 40)}
@@ -384,7 +391,52 @@ export default function ParticipantStatementTable({
   };
 
   const handleExportPDF = () => {
-    window.print();
+    const rows = table.getFilteredRowModel().rows;
+    const headers = ["Activity Item", "MTD", "YTD"];
+    const pdfRows: (string | number)[][] = [];
+
+    const formatVal = (val: number | string) =>
+      typeof val === "number"
+        ? val.toLocaleString("en-US", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })
+        : String(val);
+
+    if (beginningBalanceItem) {
+      pdfRows.push([
+        getItemName(beginningBalanceItem),
+        formatVal(getMTD(beginningBalanceItem)),
+        formatVal(getYTD(beginningBalanceItem)),
+      ]);
+    }
+
+    rows.forEach((r) => {
+      pdfRows.push([
+        getItemName(r.original),
+        formatVal(getMTD(r.original)),
+        formatVal(getYTD(r.original)),
+      ]);
+    });
+
+    if (endingBalanceItem) {
+      pdfRows.push([
+        getItemName(endingBalanceItem),
+        formatVal(getMTD(endingBalanceItem)),
+        formatVal(getYTD(endingBalanceItem)),
+      ]);
+    }
+
+    if (pdfRows.length === 0) return;
+
+    exportTableToPDF({
+      fileName: `portfolio_statement_${new Date().toISOString().slice(0, 10)}.pdf`,
+      title: "Participant Portfolio Statement",
+      subtitle: "AKRA IMS - Portfolio Statement",
+      headers,
+      rows: pdfRows,
+      orientation: "portrait",
+    });
   };
 
   return (
@@ -394,79 +446,126 @@ export default function ParticipantStatementTable({
         className,
       )}
     >
-      {/* Table Top Header: Title & Export Actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1 pt-1">
-        <div>
-          <h4 className="text-md sm:text-sm font-semibold text-slate-900 tracking-tight">
-            Portfolio Statement
-          </h4>
-        </div>
-
-        <div className="flex items-center gap-3">
-          {/* Export Icons */}
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handleExportCSV}
-              className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition-colors shadow-xs cursor-pointer"
-              title="Export to Excel / CSV"
-            >
-              <div className="relative flex items-center justify-center">
-                <FileSpreadsheet className="h-5 w-5 text-slate-700" />
-                <span className="absolute text-[8px] font-black text-slate-900 right-0 bottom-0 bg-white px-0.5 rounded border border-slate-300">
-                  X
-                </span>
-              </div>
-            </button>
-
-            <button
-              onClick={handleExportPDF}
-              className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition-colors shadow-xs cursor-pointer"
-              title="Export to PDF"
-            >
-              <div className="relative flex items-center justify-center">
-                <FileText className="h-5 w-5 text-slate-700" />
-                <span className="absolute text-[7px] font-black text-slate-900 -right-1 -bottom-0.5 bg-white px-0.5 rounded border border-slate-300">
-                  PDF
-                </span>
-              </div>
-            </button>
-          </div>
-        </div>
-      </div>
-
       {/* Main Table Container */}
       <div className="bg-white rounded-lg border border-slate-200 shadow-xs overflow-hidden flex-1 flex flex-col justify-between">
         <Table containerClassName={cn("overflow-y-auto relative", maxHeight)}>
-          <TableHeader className="sticky top-0 z-30 bg-white shadow-2xs border-b border-slate-200">
-            {/* Column Headers */}
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow
-                key={headerGroup.id}
-                className="hover:bg-transparent border-b border-slate-200 bg-white"
-              >
-                {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id} className="bg-white py-2">
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )}
-                  </TableHead>
-                ))}
-              </TableRow>
-            ))}
+          <TableHeader className="sticky top-0 z-30 bg-white border-b border-slate-200">
+            {/* Header Row: Card Title ("Portfolio Statement"), MTD, YTD & Ellipsis Vertical Export Menu */}
+            <TableRow className="hover:bg-transparent border-b border-slate-200 bg-white">
+              {/* Activity Header removed; Card Title placed in left header cell */}
+              <TableHead className="bg-white py-2.5">
+                <h4 className="text-md sm:text-sm font-semibold text-slate-900 tracking-tight">
+                  Portfolio Statement
+                </h4>
+              </TableHead>
+
+              {/* MTD Header aligned on same card header row */}
+              <TableHead className="bg-white py-2.5 text-right">
+                <div className="flex items-center justify-end gap-1">
+                  <button
+                    onClick={() => {
+                      const col = table.getColumn("mtd");
+                      if (!col) return;
+                      const isSorted = col.getIsSorted();
+                      if (!isSorted) col.toggleSorting(false);
+                      else if (isSorted === "asc") col.toggleSorting(true);
+                      else col.clearSorting();
+                    }}
+                    className={`font-bold text-xs sm:text-[12px] tracking-wider transition-colors cursor-pointer select-none py-0.5 rounded ${
+                      table.getColumn("mtd")?.getIsSorted()
+                        ? "text-blue-600 font-bold"
+                        : "text-slate-900 hover:text-blue-600"
+                    }`}
+                    title="Sort MTD (3-step: asc, desc, normal)"
+                  >
+                    MTD{" "}
+                    {table.getColumn("mtd")?.getIsSorted() === "asc"
+                      ? "↑"
+                      : table.getColumn("mtd")?.getIsSorted() === "desc"
+                        ? "↓"
+                        : ""}
+                  </button>
+                </div>
+              </TableHead>
+
+              {/* YTD Header & Ellipsis Vertical Popover Menu aligned on same card header row */}
+              <TableHead className="bg-white py-2.5 text-right">
+                <div className="flex items-center justify-end gap-2">
+                  <button
+                    onClick={() => {
+                      const col = table.getColumn("ytd");
+                      if (!col) return;
+                      const isSorted = col.getIsSorted();
+                      if (!isSorted) col.toggleSorting(false);
+                      else if (isSorted === "asc") col.toggleSorting(true);
+                      else col.clearSorting();
+                    }}
+                    className={`font-bold text-xs sm:text-[12px] tracking-wider transition-colors cursor-pointer select-none py-0.5 rounded ${
+                      table.getColumn("ytd")?.getIsSorted()
+                        ? "text-blue-600 font-bold"
+                        : "text-slate-900 hover:text-blue-600"
+                    }`}
+                    title="Sort YTD (3-step: asc, desc, normal)"
+                  >
+                    YTD{" "}
+                    {table.getColumn("ytd")?.getIsSorted() === "asc"
+                      ? "↑"
+                      : table.getColumn("ytd")?.getIsSorted() === "desc"
+                        ? "↓"
+                        : ""}
+                  </button>
+
+                  <Popover open={isExportOpen} onOpenChange={setIsExportOpen}>
+                    <PopoverTrigger asChild>
+                      <button
+                        className="p-1 rounded-md text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors cursor-pointer translate-x-4"
+                        title="Export options"
+                      >
+                        <EllipsisVertical className="h-4 w-4" />
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent
+                      align="end"
+                      className="w-44 p-1.5 shadow-md border-slate-200"
+                    >
+                      <div className="flex flex-col gap-1">
+                        <button
+                          onClick={() => {
+                            handleExportPDF();
+                            setIsExportOpen(false);
+                          }}
+                          className="flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100 rounded-md transition-colors w-full text-left cursor-pointer"
+                        >
+                          <FileText className="h-4 w-4 text-red-500" />
+                          <span>Export to PDF</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            handleExportCSV();
+                            setIsExportOpen(false);
+                          }}
+                          className="flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100 rounded-md transition-colors w-full text-left cursor-pointer"
+                        >
+                          <FileSpreadsheet className="h-4 w-4 text-emerald-600" />
+                          <span>Export to Excel</span>
+                        </button>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </TableHead>
+            </TableRow>
 
             {/* Static Top Row: Beginning Balance */}
             {beginningBalanceItem && (
-              <TableRow className="bg-slate-100 font-bold border-b-2 border-slate-200 hover:bg-slate-100 transition-colors">
-                <TableCell className="font-bold text-[13px] text-slate-900 py-2.5 bg-slate-100">
+              <TableRow className=" font-bold border-b-2  transition-colors">
+                <TableCell className="font-bold text-[13px] text-slate-900 py-2.5 ">
                   {getItemName(beginningBalanceItem)}
                 </TableCell>
-                <TableCell className="text-right text-[13px] font-bold py-2.5 bg-slate-100">
+                <TableCell className="text-right text-[13px] font-bold py-2.5 ">
                   {renderFormattedCurrency(getMTD(beginningBalanceItem))}
                 </TableCell>
-                <TableCell className="text-right text-[13px] font-bold py-2.5 bg-slate-100">
+                <TableCell className="text-right text-[13px] font-bold py-2.5 ">
                   {renderFormattedCurrency(getYTD(beginningBalanceItem))}
                 </TableCell>
               </TableRow>
@@ -502,10 +601,8 @@ export default function ParticipantStatementTable({
                   <TableRow
                     key={row.id}
                     onClick={() => setSelectedRowIndex(idx)}
-                    className={`cursor-pointer transition-colors ${
-                      isSelected
-                        ? "bg-sky-50/80 border-sky-200 font-medium"
-                        : "hover:bg-slate-50/80"
+                    className={`cursor-pointer border-0  ${
+                      isSelected ? " font-medium pl-1" : ""
                     }`}
                   >
                     {row.getVisibleCells().map((cell) => (
@@ -524,15 +621,15 @@ export default function ParticipantStatementTable({
 
           {/* Static Bottom Row: Ending Balance */}
           {endingBalanceItem && (
-            <TableFooter className="sticky bottom-0 z-30 bg-slate-100 border-t-2 border-slate-300 shadow-2xs">
-              <TableRow className="hover:bg-transparent font-bold bg-slate-100">
-                <TableCell className="font-bold text-[13px] text-slate-900 py-2.5 bg-slate-100">
+            <TableFooter className="sticky bottom-0 z-30  border-t-2 ">
+              <TableRow className="hover:bg-transparent font-bold ">
+                <TableCell className="font-bold text-[13px] text-slate-900 py-2.5 ">
                   {getItemName(endingBalanceItem)}
                 </TableCell>
-                <TableCell className="text-right text-[13px] font-bold py-2.5 bg-slate-100">
+                <TableCell className="text-right text-[13px] font-bold py-2.5 ">
                   {renderFormattedCurrency(getMTD(endingBalanceItem))}
                 </TableCell>
-                <TableCell className="text-right text-[13px] font-bold py-2.5 bg-slate-100">
+                <TableCell className="text-right text-[13px] font-bold py-2.5 ">
                   {renderFormattedCurrency(getYTD(endingBalanceItem))}
                 </TableCell>
               </TableRow>

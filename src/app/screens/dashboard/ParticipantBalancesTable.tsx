@@ -27,7 +27,13 @@ import TextFilterPopover, {
   TextFilterValue,
 } from "@/components/common/TextFilterPopover";
 import NumericFilterPopover from "@/components/common/NumericFilterPopover";
-import { FileSpreadsheet, FileText } from "lucide-react";
+import { FileSpreadsheet, FileText, EllipsisVertical } from "lucide-react";
+import { exportTableToPDF } from "@/lib/pdfExport";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 interface ParticipantBalancesTableProps {
   data: ParticipantBalanceItem[];
@@ -120,6 +126,7 @@ export default function ParticipantBalancesTable({
   const [globalFilter, setGlobalFilter] = useState<string>("");
   const [selectedRowId, setSelectedRowId] = useState<string | null>("21009");
   const [activePopoverCol, setActivePopoverCol] = useState<string | null>(null);
+  const [isExportOpen, setIsExportOpen] = useState(false);
 
   // Extract unique balances and percentages
   const uniqueBalances = useMemo(() => {
@@ -325,7 +332,30 @@ export default function ParticipantBalancesTable({
   };
 
   const handleExportPDF = () => {
-    window.print();
+    const rows = table.getFilteredRowModel().rows;
+    if (rows.length === 0) return;
+
+    const headers = ["Number", "Name", "Balance", "Pct"];
+    const pdfRows = rows.map((r) => [
+      getNum(r.original),
+      getName(r.original),
+      typeof getBalance(r.original) === "number"
+        ? (getBalance(r.original) as number).toLocaleString("en-US", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })
+        : String(getBalance(r.original)),
+      `${getPct(r.original)}%`,
+    ]);
+
+    exportTableToPDF({
+      fileName: `participant_balances_${new Date().toISOString().slice(0, 10)}.pdf`,
+      title: "Participant Balances Report",
+      subtitle: "AKRA IMS - Participant Balances",
+      headers,
+      rows: pdfRows,
+      orientation: "portrait",
+    });
   };
 
   return (
@@ -336,7 +366,7 @@ export default function ParticipantBalancesTable({
       )}
     >
       {/* Table Top Header: Title & Export Actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1 pt-1">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-1 pt-1">
         <div>
           <h4 className="text-md sm:text-sm font-semibold text-slate-900 tracking-tight">
             Participant Balances
@@ -344,34 +374,44 @@ export default function ParticipantBalancesTable({
         </div>
 
         <div className="flex items-center gap-3">
-          {/* Export Icons */}
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handleExportCSV}
-              className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition-colors shadow-xs cursor-pointer"
-              title="Export to Excel / CSV"
+          {/* Ellipsis Vertical Export Menu */}
+          <Popover open={isExportOpen} onOpenChange={setIsExportOpen}>
+            <PopoverTrigger asChild>
+              <button
+                className="p-1.5 hover:bg-slate-50 text-slate-700 transition-colors shadow-xs cursor-pointer"
+                title="Export options"
+              >
+                <EllipsisVertical className="h-4 w-4 text-slate-700" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent
+              align="end"
+              className="w-44 p-1.5 shadow-md border-slate-200"
             >
-              <div className="relative flex items-center justify-center">
-                <FileSpreadsheet className="h-5 w-5 text-slate-700" />
-                <span className="absolute text-[8px] font-black text-slate-900 right-0 bottom-0 bg-white px-0.5 rounded border border-slate-300">
-                  X
-                </span>
+              <div className="flex flex-col gap-1">
+                <button
+                  onClick={() => {
+                    handleExportPDF();
+                    setIsExportOpen(false);
+                  }}
+                  className="flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100 rounded-md transition-colors w-full text-left cursor-pointer"
+                >
+                  <FileText className="h-4 w-4 text-red-500" />
+                  <span>Export to PDF</span>
+                </button>
+                <button
+                  onClick={() => {
+                    handleExportCSV();
+                    setIsExportOpen(false);
+                  }}
+                  className="flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100 rounded-md transition-colors w-full text-left cursor-pointer"
+                >
+                  <FileSpreadsheet className="h-4 w-4 text-emerald-600" />
+                  <span>Export to Excel</span>
+                </button>
               </div>
-            </button>
-
-            <button
-              onClick={handleExportPDF}
-              className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition-colors shadow-xs cursor-pointer"
-              title="Export to PDF"
-            >
-              <div className="relative flex items-center justify-center">
-                <FileText className="h-5 w-5 text-slate-700" />
-                <span className="absolute text-[7px] font-black text-slate-900 -right-1 -bottom-0.5 bg-white px-0.5 rounded border border-slate-300">
-                  PDF
-                </span>
-              </div>
-            </button>
-          </div>
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
 

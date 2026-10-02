@@ -26,7 +26,20 @@ import TextFilterPopover, {
   TextFilterValue,
 } from "@/components/common/TextFilterPopover";
 import Pagination from "@/components/common/Pagination";
-import { Filter, FileSpreadsheet, FileText, Search, X } from "lucide-react";
+import {
+  Filter,
+  FileSpreadsheet,
+  FileText,
+  Search,
+  X,
+  EllipsisVertical,
+} from "lucide-react";
+import { exportTableToPDF } from "@/lib/pdfExport";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 interface FundPerformanceTableProps {
   data: FundPerformanceItem[];
@@ -44,7 +57,9 @@ function getVal(val?: number): number {
 
 const renderFormattedPct = (val?: number) => {
   if (val === undefined || val === null || Number.isNaN(val)) {
-    return <span className="font-semibold text-slate-700 text-[13px]">0.00%</span>;
+    return (
+      <span className="font-semibold text-slate-700 text-[13px]">0.00%</span>
+    );
   }
   const isNegative = val < 0;
   return (
@@ -104,6 +119,7 @@ export default function FundPerformanceTable({
   const [globalFilter, setGlobalFilter] = useState<string>("");
   const [selectedRowIndex, setSelectedRowIndex] = useState<number | null>(null);
   const [activePopoverCol, setActivePopoverCol] = useState<string | null>(null);
+  const [isExportOpen, setIsExportOpen] = useState(false);
   const [pagination, setPagination] = useState({
     pageIndex: 0,
     pageSize: 5,
@@ -487,7 +503,29 @@ export default function FundPerformanceTable({
   };
 
   const handleExportPDF = () => {
-    window.print();
+    const rows = table.getFilteredRowModel().rows;
+    if (rows.length === 0) return;
+
+    const headers = ["Fund Name", "MTD", "3M", "QTD", "YTD", "1Y", "5Y", "10Y"];
+    const pdfRows = rows.map((r) => [
+      getFundName(r.original),
+      `${getVal(r.original.mtdNet).toFixed(2)}%`,
+      `${getVal(r.original.threeMonthsNet).toFixed(2)}%`,
+      `${getVal(r.original.qtdNet).toFixed(2)}%`,
+      `${getVal(r.original.ytdNet).toFixed(2)}%`,
+      `${getVal(r.original.oneYearNet).toFixed(2)}%`,
+      `${getVal(r.original.fiveYearNet).toFixed(2)}%`,
+      `${getVal(r.original.tenYearNet).toFixed(2)}%`,
+    ]);
+
+    exportTableToPDF({
+      fileName: `fund_performance_${new Date().toISOString().slice(0, 10)}.pdf`,
+      title: "Fund Performance Report",
+      subtitle: "AKRA IMS - Performance Metrics",
+      headers,
+      rows: pdfRows,
+      orientation: "landscape",
+    });
   };
 
   return (
@@ -501,34 +539,44 @@ export default function FundPerformanceTable({
         </div>
 
         <div className="flex items-center gap-3">
-          {/* Export Buttons */}
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handleExportCSV}
-              className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition-colors shadow-xs"
-              title="Export to Excel / CSV"
+          {/* Ellipsis Vertical Export Menu */}
+          <Popover open={isExportOpen} onOpenChange={setIsExportOpen}>
+            <PopoverTrigger asChild>
+              <button
+                className="p-1.5   hover:bg-slate-50 text-slate-700 transition-colors shadow-xs cursor-pointer"
+                title="Export options"
+              >
+                <EllipsisVertical className="h-4 w-4 text-slate-700" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent
+              align="end"
+              className="w-44 p-1.5 shadow-md border-slate-200"
             >
-              <div className="relative flex items-center justify-center">
-                <FileSpreadsheet className="h-5 w-5 text-slate-700" />
-                <span className="absolute text-[8px] font-black text-slate-900 right-0 bottom-0 bg-white px-0.5 rounded border border-slate-300">
-                  X
-                </span>
+              <div className="flex flex-col gap-1">
+                <button
+                  onClick={() => {
+                    handleExportPDF();
+                    setIsExportOpen(false);
+                  }}
+                  className="flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100 rounded-md transition-colors w-full text-left cursor-pointer"
+                >
+                  <FileText className="h-4 w-4 text-red-500" />
+                  <span>Export to PDF</span>
+                </button>
+                <button
+                  onClick={() => {
+                    handleExportCSV();
+                    setIsExportOpen(false);
+                  }}
+                  className="flex items-center gap-2.5 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100 rounded-md transition-colors w-full text-left cursor-pointer"
+                >
+                  <FileSpreadsheet className="h-4 w-4 text-emerald-600" />
+                  <span>Export to Excel</span>
+                </button>
               </div>
-            </button>
-
-            <button
-              onClick={handleExportPDF}
-              className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition-colors shadow-xs"
-              title="Export to PDF"
-            >
-              <div className="relative flex items-center justify-center">
-                <FileText className="h-5 w-5 text-slate-700" />
-                <span className="absolute text-[7px] font-black text-slate-900 -right-1 -bottom-0.5 bg-white px-0.5 rounded border border-slate-300">
-                  PDF
-                </span>
-              </div>
-            </button>
-          </div>
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
 
@@ -537,7 +585,10 @@ export default function FundPerformanceTable({
         <Table containerClassName="max-h-[50vh] lg:max-h-[calc(100vh-320px)] overflow-y-auto relative">
           <TableHeader className="sticky top-0 z-30 bg-white shadow-2xs border-b border-slate-200">
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id} className="hover:bg-transparent border-b border-slate-200 bg-white">
+              <TableRow
+                key={headerGroup.id}
+                className="hover:bg-transparent border-b border-slate-200 bg-white"
+              >
                 {headerGroup.headers.map((header) => (
                   <TableHead key={header.id} className="bg-white py-2">
                     {header.isPlaceholder

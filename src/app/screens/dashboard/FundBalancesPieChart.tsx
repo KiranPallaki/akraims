@@ -176,10 +176,10 @@ export default function FundBalancesPieChart({
             <div className="h-9 w-9 animate-spin rounded-full border-4 border-slate-200 border-t-blue-600" />
           </div>
         ) : groupedData.length === 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 lg:gap-8 items-center flex-1 my-auto">
+          <div className="grid grid-cols-1 md:grid-cols-10 gap-4 lg:gap-6 items-center flex-1 my-auto md:translate-x-6">
             {/* Empty Donut Ring */}
             <div className="md:col-span-5 flex flex-col items-center justify-center relative min-h-[220px]">
-              <div className="relative w-52 h-52 sm:w-60 sm:h-60 flex items-center justify-center">
+              <div className="relative w-60 h-52 sm:w-70 sm:h-60 flex items-center justify-center">
                 <svg
                   viewBox="0 0 200 200"
                   className="w-full h-full overflow-visible"
@@ -226,9 +226,9 @@ export default function FundBalancesPieChart({
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6 lg:gap-8 items-center flex-1 my-auto">
             {/* SVG Pie Chart Container with Floating Tooltip OVER Graph */}
-            <div className="md:col-span-5 flex flex-col items-center justify-center relative min-h-[240px] translate-x-4">
+            <div className="md:col-span-5 flex flex-col items-center justify-center relative min-h-[240px] translate-x-10">
               <div
-                className="relative w-56 h-56 sm:w-64 sm:h-64 flex items-center justify-center"
+                className="relative w-60 h-56 sm:w-70 sm:h-64 flex items-center justify-center"
                 onMouseMove={(e) => {
                   const rect = e.currentTarget.getBoundingClientRect();
                   setTooltipCoords({
@@ -330,7 +330,7 @@ export default function FundBalancesPieChart({
             </div>
 
             {/* Legend Section */}
-            <div className="md:col-span-7 flex flex-col justify-end space-y-1.5 pl-4">
+            <div className="md:col-span-5 flex flex-col justify-end space-y-1.5 md:translate-x-[65px]">
               {groupedData.map((group, index) => {
                 const isHovered = activeGraphIndex === index;
 
