@@ -125,7 +125,7 @@ export default function FundPerformanceTable({
     pageSize: 5,
   });
 
-  // Unique value extractors for numeric filters
+  // Unique value extractors for numeric filters  "sinceInceptionNet": 0.88
   const uniqueMTD = useMemo(() => {
     const set = new Set<number>();
     data.forEach((i) => set.add(getVal(i.mtdNet)));
@@ -165,6 +165,12 @@ export default function FundPerformanceTable({
   const unique10Y = useMemo(() => {
     const set = new Set<number>();
     data.forEach((i) => set.add(getVal(i.tenYearNet)));
+    return Array.from(set).sort((a, b) => b - a);
+  }, [data]);
+
+  const uniqueITD = useMemo(() => {
+    const set = new Set<number>();
+    data.forEach((i) => set.add(getVal(i.sinceInceptionNet)));
     return Array.from(set).sort((a, b) => b - a);
   }, [data]);
 
@@ -211,7 +217,6 @@ export default function FundPerformanceTable({
         filterFn: numericMultiSelectFilterFn,
         header: ({ column }) => {
           const isSorted = column.getIsSorted();
-          const filterValue = column.getFilterValue() as number[] | null;
 
           return (
             <div className="flex items-center justify-end gap-1 py-1">
@@ -437,6 +442,39 @@ export default function FundPerformanceTable({
           </div>
         ),
       },
+      {
+        id: "sinceInceptionNet",
+        accessorFn: (row) => getVal(row.sinceInceptionNet),
+        filterFn: numericMultiSelectFilterFn,
+        header: ({ column }) => {
+          const isSorted = column.getIsSorted();
+
+          return (
+            <div className="flex items-center justify-end gap-1 py-1">
+              <button
+                onClick={() => {
+                  if (!isSorted) column.toggleSorting(false);
+                  else if (isSorted === "asc") column.toggleSorting(true);
+                  else column.clearSorting();
+                }}
+                className={`font-bold text-xs sm:text-[12px] tracking-wider transition-colors cursor-pointer select-none py-0.5 rounded ${
+                  isSorted
+                    ? "text-blue-600"
+                    : "text-slate-900 hover:text-blue-600"
+                }`}
+                title="Sort Since Inception (3-step: asc, desc, normal)"
+              >
+                ITD
+              </button>
+            </div>
+          );
+        },
+        cell: ({ row }) => (
+          <div className="text-right">
+            {renderFormattedPct(row.original.sinceInceptionNet)}
+          </div>
+        ),
+      },
     ],
     [
       activePopoverCol,
@@ -447,6 +485,7 @@ export default function FundPerformanceTable({
       unique1Y,
       unique5Y,
       unique10Y,
+      uniqueITD,
     ],
   );
 
@@ -472,7 +511,17 @@ export default function FundPerformanceTable({
     const rows = table.getFilteredRowModel().rows;
     if (rows.length === 0) return;
 
-    const headers = ["Fund Name", "MTD", "3M", "QTD", "YTD", "1Y", "5Y", "10Y"];
+    const headers = [
+      "Fund Name",
+      "MTD",
+      "3M",
+      "QTD",
+      "YTD",
+      "1Y",
+      "5Y",
+      "10Y",
+      "ITD",
+    ];
     const csvLines = [headers.join(",")];
 
     rows.forEach((r) => {
@@ -484,7 +533,8 @@ export default function FundPerformanceTable({
       const y1 = getVal(r.original.oneYearNet);
       const y5 = getVal(r.original.fiveYearNet);
       const y10 = getVal(r.original.tenYearNet);
-      csvLines.push([fn, mtd, m3, qtd, ytd, y1, y5, y10].join(","));
+      const itd = getVal(r.original.sinceInceptionNet);
+      csvLines.push([fn, mtd, m3, qtd, ytd, y1, y5, y10, itd].join(","));
     });
 
     const blob = new Blob([csvLines.join("\n")], {
@@ -506,7 +556,17 @@ export default function FundPerformanceTable({
     const rows = table.getFilteredRowModel().rows;
     if (rows.length === 0) return;
 
-    const headers = ["Fund Name", "MTD", "3M", "QTD", "YTD", "1Y", "5Y", "10Y"];
+    const headers = [
+      "Fund Name",
+      "MTD",
+      "3M",
+      "QTD",
+      "YTD",
+      "1Y",
+      "5Y",
+      "10Y",
+      "ITD",
+    ];
     const pdfRows = rows.map((r) => [
       getFundName(r.original),
       `${getVal(r.original.mtdNet).toFixed(2)}%`,
@@ -516,6 +576,7 @@ export default function FundPerformanceTable({
       `${getVal(r.original.oneYearNet).toFixed(2)}%`,
       `${getVal(r.original.fiveYearNet).toFixed(2)}%`,
       `${getVal(r.original.tenYearNet).toFixed(2)}%`,
+      `${getVal(r.original.sinceInceptionNet).toFixed(2)}%`,
     ]);
 
     exportTableToPDF({
@@ -529,9 +590,9 @@ export default function FundPerformanceTable({
   };
 
   return (
-    <div className="bg-white p-2 sm:p-2 rounded-lg border border-slate-200/80 shadow-xs space-y-4">
+    <div className="bg-white p-2 sm:p-2 rounded-lg border border-slate-200/80 space-y-4 ">
       {/* Top Header: Title & Export Actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1 pt-1">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1 pt-1 mb-0">
         <div>
           <h4 className="text-md sm:text-sm font-semibold text-slate-900 tracking-tight">
             Fund Performance

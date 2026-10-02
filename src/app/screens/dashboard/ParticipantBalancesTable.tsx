@@ -361,14 +361,14 @@ export default function ParticipantBalancesTable({
   return (
     <div
       className={cn(
-        "bg-white p-2 sm:p-2 rounded-lg border border-slate-200/80 shadow-xs flex flex-col justify-between h-full space-y-4",
+        "bg-white p-2 sm:p-2 rounded-lg border border-slate-200/80 shadow-xs flex flex-col justify-between h-full ",
         className,
       )}
     >
       {/* Table Top Header: Title & Export Actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-1 pt-1">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-1 pt-1 space-y-4">
         <div>
-          <h4 className="text-md sm:text-sm font-semibold text-slate-900 tracking-tight">
+          <h4 className="text-md sm:text-sm font-semibold text-slate-900 tracking-tight mb-0">
             Participant Balances
           </h4>
         </div>
@@ -378,7 +378,7 @@ export default function ParticipantBalancesTable({
           <Popover open={isExportOpen} onOpenChange={setIsExportOpen}>
             <PopoverTrigger asChild>
               <button
-                className="p-1.5 hover:bg-slate-50 text-slate-700 transition-colors shadow-xs cursor-pointer"
+                className="p-1.5 text-slate-700 transition-colors  cursor-pointer"
                 title="Export options"
               >
                 <EllipsisVertical className="h-4 w-4 text-slate-700" />
@@ -416,16 +416,16 @@ export default function ParticipantBalancesTable({
       </div>
 
       {/* Main Table Card */}
-      <div className="bg-white rounded-lg border border-slate-200 shadow-xs overflow-hidden flex-1 flex flex-col justify-between">
+      <div className="bg-white   overflow-hidden flex-1 flex flex-col justify-between">
         <Table containerClassName={cn("overflow-y-auto relative", maxHeight)}>
-          <TableHeader className="sticky top-0 z-30 bg-white shadow-2xs border-b border-slate-200">
+          <TableHeader className="sticky top-0 z-30 bg-white  border-b border-slate-200">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow
                 key={headerGroup.id}
-                className="hover:bg-transparent border-b border-slate-200 bg-white"
+                className="hover:bg-transparent border-t border-slate-100 border-b border-slate-100 bg-white"
               >
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id} className="bg-white py-2">
+                  <TableHead key={header.id} className="bg-white py-1">
                     {header.isPlaceholder
                       ? null
                       : flexRender(
