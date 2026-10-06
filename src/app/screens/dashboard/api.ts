@@ -8,6 +8,7 @@ import {
   DashboardFundPerformanceItem,
   DashboardFundStatementItem,
   DashboardPerfBalanceHistoryItem,
+  DashboardHistoricalParticipantPerformanceItem,
 } from "./types";
 
 export async function fetchDashboardNetActivity(
@@ -218,3 +219,38 @@ export async function fetchPerfBalanceHistory(
     return [];
   }
 }
+
+export async function fetchHistoricalParticipantPerformance(
+  clientID?: number
+): Promise<DashboardHistoricalParticipantPerformanceItem[]> {
+  try {
+    const effectiveClientID = clientID ?? getSelectedClient()?.clientID;
+    const headers: Record<string, string> = {};
+    if (effectiveClientID !== undefined && effectiveClientID !== null) {
+      headers["ClientID"] = String(effectiveClientID);
+    }
+
+    const response = await apiClient("/dashboards", {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ RequestType: "HistoricalParticipantPerformance" }),
+    });
+
+    if (response.ok) {
+      const result = await response.json();
+      return Array.isArray(result)
+        ? result
+        : Array.isArray(result?.data)
+        ? result.data
+        : [];
+    }
+    return [];
+  } catch (error) {
+    console.warn(
+      "[Dashboard API] Error fetching HistoricalParticipantPerformance:",
+      error
+    );
+    return [];
+  }
+}
+

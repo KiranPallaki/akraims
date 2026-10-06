@@ -21,6 +21,8 @@ export async function apiClient(
   options: RequestInit = {},
 ): Promise<Response> {
   const token = getAuthToken();
+  const selectedClient = getSelectedClient();
+
   if (!API_BASE_URL && !endpoint.startsWith("http")) {
     throw new Error("NEXT_PUBLIC_API_BASE_URL is not configured");
   }
@@ -30,6 +32,9 @@ export async function apiClient(
 
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
+    ...(selectedClient?.clientID !== undefined && selectedClient?.clientID !== null
+      ? { ClientID: String(selectedClient.clientID) }
+      : {}),
     ...(options.headers as Record<string, string>),
   };
 

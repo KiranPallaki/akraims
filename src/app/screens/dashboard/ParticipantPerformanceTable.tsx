@@ -13,7 +13,7 @@ import {
   useReactTable,
   FilterFn,
 } from "@tanstack/react-table";
-import { FundPerformanceItem } from "@/types/dashboard";
+import { HistoricalParticipantPerformanceItem } from "@/types/dashboard";
 import {
   Table,
   TableBody,
@@ -27,12 +27,10 @@ import TextFilterPopover, {
 } from "@/components/common/TextFilterPopover";
 import Pagination from "@/components/common/Pagination";
 import {
-  Filter,
   FileSpreadsheet,
   FileText,
-  Search,
-  X,
   EllipsisVertical,
+  Users,
 } from "lucide-react";
 import { exportTableToPDF } from "@/lib/pdfExport";
 import {
@@ -42,15 +40,31 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
-interface FundPerformanceTableProps {
-  data: FundPerformanceItem[];
+interface ParticipantPerformanceTableProps {
+  data: HistoricalParticipantPerformanceItem[];
   isLoading?: boolean;
   className?: string;
   maxHeight?: string;
 }
 
 // Accessor helpers
-function getFundName(item: FundPerformanceItem): string {
+function getParticipantNo(item: HistoricalParticipantPerformanceItem): string {
+  return String(
+    item.participantNumber ??
+      item.number ??
+      item.participantNo ??
+      item.participantID ??
+      ""
+  );
+}
+
+function getParticipantName(
+  item: HistoricalParticipantPerformanceItem
+): string {
+  return String(item.participantName ?? item.name ?? "");
+}
+
+function getFundName(item: HistoricalParticipantPerformanceItem): string {
   return String(item.fundName ?? item.fund ?? "");
 }
 
@@ -76,11 +90,11 @@ const renderFormattedPct = (val?: number) => {
   );
 };
 
-// Filter Functions
-const textFilterFn: FilterFn<FundPerformanceItem> = (
+// Custom Filter Functions
+const textFilterFn: FilterFn<HistoricalParticipantPerformanceItem> = (
   row,
   columnId,
-  filterValue,
+  filterValue
 ) => {
   if (!filterValue) return true;
   const { value, mode } = filterValue as TextFilterValue;
@@ -102,10 +116,10 @@ const textFilterFn: FilterFn<FundPerformanceItem> = (
   }
 };
 
-const numericMultiSelectFilterFn: FilterFn<FundPerformanceItem> = (
+const numericMultiSelectFilterFn: FilterFn<HistoricalParticipantPerformanceItem> = (
   row,
   columnId,
-  filterValue,
+  filterValue
 ) => {
   if (!filterValue || !Array.isArray(filterValue) || filterValue.length === 0)
     return true;
@@ -113,85 +127,96 @@ const numericMultiSelectFilterFn: FilterFn<FundPerformanceItem> = (
   return (filterValue as number[]).includes(val);
 };
 
-export default function FundPerformanceTable({
+export default function ParticipantPerformanceTable({
   data = [],
   isLoading = false,
   className,
   maxHeight = "max-h-[50vh] lg:max-h-[calc(100vh-320px)]",
-}: FundPerformanceTableProps) {
+}: ParticipantPerformanceTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [globalFilter, setGlobalFilter] = useState<string>("");
   const [selectedRowIndex, setSelectedRowIndex] = useState<number | null>(null);
-  const [activePopoverCol, setActivePopoverCol] = useState<string | null>(null);
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [pagination, setPagination] = useState({
     pageIndex: 0,
     pageSize: 5,
   });
 
-  // Unique value extractors for numeric filters  "sinceInceptionNet": 0.88
-  const uniqueMTD = useMemo(() => {
-    const set = new Set<number>();
-    data.forEach((i) => set.add(getVal(i.mtdNet)));
-    return Array.from(set).sort((a, b) => b - a);
-  }, [data]);
-
-  const unique3M = useMemo(() => {
-    const set = new Set<number>();
-    data.forEach((i) => set.add(getVal(i.threeMonthsNet)));
-    return Array.from(set).sort((a, b) => b - a);
-  }, [data]);
-
-  const uniqueQTD = useMemo(() => {
-    const set = new Set<number>();
-    data.forEach((i) => set.add(getVal(i.qtdNet)));
-    return Array.from(set).sort((a, b) => b - a);
-  }, [data]);
-
-  const uniqueYTD = useMemo(() => {
-    const set = new Set<number>();
-    data.forEach((i) => set.add(getVal(i.ytdNet)));
-    return Array.from(set).sort((a, b) => b - a);
-  }, [data]);
-
-  const unique1Y = useMemo(() => {
-    const set = new Set<number>();
-    data.forEach((i) => set.add(getVal(i.oneYearNet)));
-    return Array.from(set).sort((a, b) => b - a);
-  }, [data]);
-
-  const unique5Y = useMemo(() => {
-    const set = new Set<number>();
-    data.forEach((i) => set.add(getVal(i.fiveYearNet)));
-    return Array.from(set).sort((a, b) => b - a);
-  }, [data]);
-
-  const unique10Y = useMemo(() => {
-    const set = new Set<number>();
-    data.forEach((i) => set.add(getVal(i.tenYearNet)));
-    return Array.from(set).sort((a, b) => b - a);
-  }, [data]);
-
-  const uniqueITD = useMemo(() => {
-    const set = new Set<number>();
-    data.forEach((i) => set.add(getVal(i.sinceInceptionNet)));
-    return Array.from(set).sort((a, b) => b - a);
-  }, [data]);
-
-  const columns = useMemo<ColumnDef<FundPerformanceItem>[]>(
+  const columns = useMemo<ColumnDef<HistoricalParticipantPerformanceItem>[]>(
     () => [
+      {
+        id: "participantNumber",
+        accessorFn: (row) => getParticipantNo(row),
+        filterFn: textFilterFn,
+        header: ({ column }) => {
+          const isSorted = column.getIsSorted();
+          return (
+            <div className="flex items-center justify-between gap-1 py-1">
+              <button
+                onClick={() => {
+                  if (!isSorted) column.toggleSorting(false);
+                  else if (isSorted === "asc") column.toggleSorting(true);
+                  else column.clearSorting();
+                }}
+                className={`font-bold text-xs sm:text-[12px] tracking-wider transition-colors cursor-pointer select-none py-0.5 rounded ${
+                  isSorted
+                    ? "text-blue-600 font-bold"
+                    : "text-slate-800 hover:text-blue-600"
+                }`}
+                title="Sort Participant No (3-step: asc, desc, normal)"
+              >
+                Participant No
+              </button>
+            </div>
+          );
+        },
+        cell: ({ row }) => (
+          <span className="text-left font-medium text-slate-700 text-[13px]">
+            {getParticipantNo(row.original)}
+          </span>
+        ),
+      },
+      {
+        id: "participantName",
+        accessorFn: (row) => getParticipantName(row),
+        filterFn: textFilterFn,
+        header: ({ column }) => {
+          const isSorted = column.getIsSorted();
+          return (
+            <div className="flex items-center justify-between gap-1 py-1 min-w-[140px]">
+              <button
+                onClick={() => {
+                  if (!isSorted) column.toggleSorting(false);
+                  else if (isSorted === "asc") column.toggleSorting(true);
+                  else column.clearSorting();
+                }}
+                className={`font-bold text-xs sm:text-[12px] tracking-wider transition-colors cursor-pointer select-none py-0.5 rounded ${
+                  isSorted
+                    ? "text-blue-600 font-bold"
+                    : "text-slate-800 hover:text-blue-600"
+                }`}
+                title="Sort Name (3-step: asc, desc, normal)"
+              >
+                Participant Name
+              </button>
+            </div>
+          );
+        },
+        cell: ({ row }) => (
+          <span className="text-left font-medium text-slate-700 text-[13px] block truncate max-w-[180px]">
+            {getParticipantName(row.original)}
+          </span>
+        ),
+      },
       {
         id: "fundName",
         accessorFn: (row) => getFundName(row),
         filterFn: textFilterFn,
         header: ({ column }) => {
           const isSorted = column.getIsSorted();
-          const filterValue = column.getFilterValue() as TextFilterValue | null;
-          const isFiltered = !!(filterValue && filterValue.value);
-
           return (
-            <div className="flex items-center justify-between gap-1 py-1 min-w-[160px]">
+            <div className="flex items-center justify-between gap-1 py-1 min-w-[140px]">
               <button
                 onClick={() => {
                   if (!isSorted) column.toggleSorting(false);
@@ -211,18 +236,17 @@ export default function FundPerformanceTable({
           );
         },
         cell: ({ row }) => (
-          <span className="text-left font-medium text-slate-700 text-[13px] sm:text-[13px]">
+          <span className="text-left font-medium text-slate-700 text-[13px] block truncate max-w-[180px]">
             {getFundName(row.original)}
           </span>
         ),
       },
       {
         id: "mtdNet",
-        accessorFn: (row) => getVal(row.mtdNet),
+        accessorFn: (row) => getVal(row.mtdNet ?? row.mtd),
         filterFn: numericMultiSelectFilterFn,
         header: ({ column }) => {
           const isSorted = column.getIsSorted();
-
           return (
             <div className="flex items-center justify-end gap-1 py-1">
               <button
@@ -245,17 +269,17 @@ export default function FundPerformanceTable({
         },
         cell: ({ row }) => (
           <div className="text-right">
-            {renderFormattedPct(row.original.mtdNet)}
+            {renderFormattedPct(row.original.mtdNet ?? row.original.mtd)}
           </div>
         ),
       },
       {
         id: "threeMonthsNet",
-        accessorFn: (row) => getVal(row.threeMonthsNet),
+        accessorFn: (row) =>
+          getVal(row.threeMonthsNet ?? row.threeMonths ?? row.m3),
         filterFn: numericMultiSelectFilterFn,
         header: ({ column }) => {
           const isSorted = column.getIsSorted();
-
           return (
             <div className="flex items-center justify-end gap-1 py-1">
               <button
@@ -278,17 +302,20 @@ export default function FundPerformanceTable({
         },
         cell: ({ row }) => (
           <div className="text-right">
-            {renderFormattedPct(row.original.threeMonthsNet)}
+            {renderFormattedPct(
+              row.original.threeMonthsNet ??
+                row.original.threeMonths ??
+                row.original.m3
+            )}
           </div>
         ),
       },
       {
         id: "qtdNet",
-        accessorFn: (row) => getVal(row.qtdNet),
+        accessorFn: (row) => getVal(row.qtdNet ?? row.qtd),
         filterFn: numericMultiSelectFilterFn,
         header: ({ column }) => {
           const isSorted = column.getIsSorted();
-
           return (
             <div className="flex items-center justify-end gap-1 py-1">
               <button
@@ -311,17 +338,16 @@ export default function FundPerformanceTable({
         },
         cell: ({ row }) => (
           <div className="text-right">
-            {renderFormattedPct(row.original.qtdNet)}
+            {renderFormattedPct(row.original.qtdNet ?? row.original.qtd)}
           </div>
         ),
       },
       {
         id: "ytdNet",
-        accessorFn: (row) => getVal(row.ytdNet),
+        accessorFn: (row) => getVal(row.ytdNet ?? row.ytd),
         filterFn: numericMultiSelectFilterFn,
         header: ({ column }) => {
           const isSorted = column.getIsSorted();
-
           return (
             <div className="flex items-center justify-end gap-1 py-1">
               <button
@@ -344,17 +370,16 @@ export default function FundPerformanceTable({
         },
         cell: ({ row }) => (
           <div className="text-right">
-            {renderFormattedPct(row.original.ytdNet)}
+            {renderFormattedPct(row.original.ytdNet ?? row.original.ytd)}
           </div>
         ),
       },
       {
         id: "oneYearNet",
-        accessorFn: (row) => getVal(row.oneYearNet),
+        accessorFn: (row) => getVal(row.oneYearNet ?? row.oneYear ?? row.y1),
         filterFn: numericMultiSelectFilterFn,
         header: ({ column }) => {
           const isSorted = column.getIsSorted();
-
           return (
             <div className="flex items-center justify-end gap-1 py-1">
               <button
@@ -377,17 +402,18 @@ export default function FundPerformanceTable({
         },
         cell: ({ row }) => (
           <div className="text-right">
-            {renderFormattedPct(row.original.oneYearNet)}
+            {renderFormattedPct(
+              row.original.oneYearNet ?? row.original.oneYear ?? row.original.y1
+            )}
           </div>
         ),
       },
       {
         id: "fiveYearNet",
-        accessorFn: (row) => getVal(row.fiveYearNet),
+        accessorFn: (row) => getVal(row.fiveYearNet ?? row.fiveYear ?? row.y5),
         filterFn: numericMultiSelectFilterFn,
         header: ({ column }) => {
           const isSorted = column.getIsSorted();
-
           return (
             <div className="flex items-center justify-end gap-1 py-1">
               <button
@@ -410,17 +436,20 @@ export default function FundPerformanceTable({
         },
         cell: ({ row }) => (
           <div className="text-right">
-            {renderFormattedPct(row.original.fiveYearNet)}
+            {renderFormattedPct(
+              row.original.fiveYearNet ??
+                row.original.fiveYear ??
+                row.original.y5
+            )}
           </div>
         ),
       },
       {
         id: "tenYearNet",
-        accessorFn: (row) => getVal(row.tenYearNet),
+        accessorFn: (row) => getVal(row.tenYearNet ?? row.tenYear ?? row.y10),
         filterFn: numericMultiSelectFilterFn,
         header: ({ column }) => {
           const isSorted = column.getIsSorted();
-
           return (
             <div className="flex items-center justify-end gap-1 py-1">
               <button
@@ -443,17 +472,21 @@ export default function FundPerformanceTable({
         },
         cell: ({ row }) => (
           <div className="text-right">
-            {renderFormattedPct(row.original.tenYearNet)}
+            {renderFormattedPct(
+              row.original.tenYearNet ??
+                row.original.tenYear ??
+                row.original.y10
+            )}
           </div>
         ),
       },
       {
         id: "sinceInceptionNet",
-        accessorFn: (row) => getVal(row.sinceInceptionNet),
+        accessorFn: (row) =>
+          getVal(row.sinceInceptionNet ?? row.sinceInception ?? row.itd),
         filterFn: numericMultiSelectFilterFn,
         header: ({ column }) => {
           const isSorted = column.getIsSorted();
-
           return (
             <div className="flex items-center justify-end gap-1 py-1">
               <button
@@ -476,22 +509,16 @@ export default function FundPerformanceTable({
         },
         cell: ({ row }) => (
           <div className="text-right">
-            {renderFormattedPct(row.original.sinceInceptionNet)}
+            {renderFormattedPct(
+              row.original.sinceInceptionNet ??
+                row.original.sinceInception ??
+                row.original.itd
+            )}
           </div>
         ),
       },
     ],
-    [
-      activePopoverCol,
-      uniqueMTD,
-      unique3M,
-      uniqueQTD,
-      uniqueYTD,
-      unique1Y,
-      unique5Y,
-      unique10Y,
-      uniqueITD,
-    ],
+    []
   );
 
   const table = useReactTable({
@@ -517,6 +544,8 @@ export default function FundPerformanceTable({
     if (rows.length === 0) return;
 
     const headers = [
+      "Participant No",
+      "Participant Name",
       "Fund Name",
       "MTD",
       "3M",
@@ -530,16 +559,32 @@ export default function FundPerformanceTable({
     const csvLines = [headers.join(",")];
 
     rows.forEach((r) => {
+      const pNo = `"${getParticipantNo(r.original).replace(/"/g, '""')}"`;
+      const pName = `"${getParticipantName(r.original).replace(/"/g, '""')}"`;
       const fn = `"${getFundName(r.original).replace(/"/g, '""')}"`;
-      const mtd = getVal(r.original.mtdNet);
-      const m3 = getVal(r.original.threeMonthsNet);
-      const qtd = getVal(r.original.qtdNet);
-      const ytd = getVal(r.original.ytdNet);
-      const y1 = getVal(r.original.oneYearNet);
-      const y5 = getVal(r.original.fiveYearNet);
-      const y10 = getVal(r.original.tenYearNet);
-      const itd = getVal(r.original.sinceInceptionNet);
-      csvLines.push([fn, mtd, m3, qtd, ytd, y1, y5, y10, itd].join(","));
+      const mtd = getVal(r.original.mtdNet ?? r.original.mtd);
+      const m3 = getVal(
+        r.original.threeMonthsNet ?? r.original.threeMonths ?? r.original.m3
+      );
+      const qtd = getVal(r.original.qtdNet ?? r.original.qtd);
+      const ytd = getVal(r.original.ytdNet ?? r.original.ytd);
+      const y1 = getVal(
+        r.original.oneYearNet ?? r.original.oneYear ?? r.original.y1
+      );
+      const y5 = getVal(
+        r.original.fiveYearNet ?? r.original.fiveYear ?? r.original.y5
+      );
+      const y10 = getVal(
+        r.original.tenYearNet ?? r.original.tenYear ?? r.original.y10
+      );
+      const itd = getVal(
+        r.original.sinceInceptionNet ??
+          r.original.sinceInception ??
+          r.original.itd
+      );
+      csvLines.push(
+        [pNo, pName, fn, mtd, m3, qtd, ytd, y1, y5, y10, itd].join(",")
+      );
     });
 
     const blob = new Blob([csvLines.join("\n")], {
@@ -550,7 +595,9 @@ export default function FundPerformanceTable({
     link.setAttribute("href", url);
     link.setAttribute(
       "download",
-      `fund_performance_${new Date().toISOString().slice(0, 10)}.csv`,
+      `historical_participant_performance_${new Date()
+        .toISOString()
+        .slice(0, 10)}.csv`
     );
     document.body.appendChild(link);
     link.click();
@@ -562,6 +609,8 @@ export default function FundPerformanceTable({
     if (rows.length === 0) return;
 
     const headers = [
+      "Participant No",
+      "Participant Name",
       "Fund Name",
       "MTD",
       "3M",
@@ -573,21 +622,37 @@ export default function FundPerformanceTable({
       "ITD",
     ];
     const pdfRows = rows.map((r) => [
+      getParticipantNo(r.original),
+      getParticipantName(r.original),
       getFundName(r.original),
-      `${getVal(r.original.mtdNet).toFixed(2)}%`,
-      `${getVal(r.original.threeMonthsNet).toFixed(2)}%`,
-      `${getVal(r.original.qtdNet).toFixed(2)}%`,
-      `${getVal(r.original.ytdNet).toFixed(2)}%`,
-      `${getVal(r.original.oneYearNet).toFixed(2)}%`,
-      `${getVal(r.original.fiveYearNet).toFixed(2)}%`,
-      `${getVal(r.original.tenYearNet).toFixed(2)}%`,
-      `${getVal(r.original.sinceInceptionNet).toFixed(2)}%`,
+      `${getVal(r.original.mtdNet ?? r.original.mtd).toFixed(2)}%`,
+      `${getVal(
+        r.original.threeMonthsNet ?? r.original.threeMonths ?? r.original.m3
+      ).toFixed(2)}%`,
+      `${getVal(r.original.qtdNet ?? r.original.qtd).toFixed(2)}%`,
+      `${getVal(r.original.ytdNet ?? r.original.ytd).toFixed(2)}%`,
+      `${getVal(
+        r.original.oneYearNet ?? r.original.oneYear ?? r.original.y1
+      ).toFixed(2)}%`,
+      `${getVal(
+        r.original.fiveYearNet ?? r.original.fiveYear ?? r.original.y5
+      ).toFixed(2)}%`,
+      `${getVal(
+        r.original.tenYearNet ?? r.original.tenYear ?? r.original.y10
+      ).toFixed(2)}%`,
+      `${getVal(
+        r.original.sinceInceptionNet ??
+          r.original.sinceInception ??
+          r.original.itd
+      ).toFixed(2)}%`,
     ]);
 
     exportTableToPDF({
-      fileName: `fund_performance_${new Date().toISOString().slice(0, 10)}.pdf`,
-      title: "Fund Performance Report",
-      subtitle: "AKRA IMS - Performance Metrics",
+      fileName: `historical_participant_performance_${new Date()
+        .toISOString()
+        .slice(0, 10)}.pdf`,
+      title: "Historical Participant Performance Report",
+      subtitle: "AKRA IMS - Participant Performance Metrics",
       headers,
       rows: pdfRows,
       orientation: "landscape",
@@ -603,9 +668,10 @@ export default function FundPerformanceTable({
     >
       {/* Top Header: Title & Export Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1 pt-1 mb-0">
-        <div>
+        <div className="flex items-center gap-2">
+          <Users className="h-4 w-4 text-blue-600" />
           <h4 className="text-md sm:text-sm font-semibold text-slate-900 tracking-tight">
-            Fund Performance
+            Participant Performance History
           </h4>
         </div>
 
@@ -666,7 +732,7 @@ export default function FundPerformanceTable({
                       ? null
                       : flexRender(
                           header.column.columnDef.header,
-                          header.getContext(),
+                          header.getContext()
                         )}
                   </TableHead>
                 ))}
@@ -682,7 +748,7 @@ export default function FundPerformanceTable({
                 >
                   <div className="flex items-center justify-center gap-2 text-slate-500">
                     <div className="h-5 w-5 animate-spin rounded-full border-2 border-slate-300 border-t-blue-600" />
-                    <span>Loading fund performance...</span>
+                    <span>Loading participant performance history...</span>
                   </div>
                 </TableCell>
               </TableRow>
@@ -692,7 +758,7 @@ export default function FundPerformanceTable({
                   colSpan={columns.length}
                   className="h-28 text-center text-slate-500 text-xs font-medium"
                 >
-                  No data available
+                  No participant performance history available
                 </TableCell>
               </TableRow>
             ) : (
@@ -712,7 +778,7 @@ export default function FundPerformanceTable({
                       <TableCell key={cell.id}>
                         {flexRender(
                           cell.column.columnDef.cell,
-                          cell.getContext(),
+                          cell.getContext()
                         )}
                       </TableCell>
                     ))}

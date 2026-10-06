@@ -7,4 +7,5 @@ export type {
   DashboardFundPerformanceItem as FundPerformanceItem,
   DashboardFundStatementItem as FundStatementItem,
   DashboardPerfBalanceHistoryItem as PerfBalanceHistoryItem,
+  DashboardHistoricalParticipantPerformanceItem as HistoricalParticipantPerformanceItem,
 } from "@/app/screens/dashboard/types";

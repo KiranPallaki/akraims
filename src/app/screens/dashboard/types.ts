@@ -117,3 +117,27 @@ export interface DashboardPerfBalanceHistoryItem {
   previousMarketValue?: number;
   rateOfReturn?: number;
 }
+
+export interface DashboardHistoricalParticipantPerformanceItem {
+  participantID?: number;
+  participantNumber?: string | number;
+  participantNo?: string | number;
+  number?: string | number;
+  participantName?: string;
+  name?: string;
+  fundID?: number;
+  fund?: string;
+  fundName?: string;
+  perfDate?: string;
+  mtdNet?: number;
+  threeMonthsNet?: number;
+  qtdNet?: number;
+  ytdNet?: number;
+  oneYearNet?: number;
+  fiveYearNet?: number;
+  sevenYearNet?: number;
+  tenYearNet?: number;
+  sinceInceptionNet?: number;
+  [key: string]: any;
+}
+
