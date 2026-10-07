@@ -29,6 +29,21 @@ function formatOrdinalDate(dateStr?: string): string {
   return `${monthName} ${day}${suffix} '${year}`;
 }
 
+function formatXAxisDate(dateStr?: string, totalPoints: number = 12): string {
+  if (!dateStr) return "";
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return dateStr;
+
+  const monthName = date.toLocaleString("en-US", { month: "short" });
+  const year = String(date.getFullYear()).slice(-2);
+
+  if (totalPoints > 6) {
+    return `${monthName} '${year}`;
+  }
+  const day = date.getDate();
+  return `${monthName} ${day} '${year}`;
+}
+
 const formatCurrency = (val: number): string => {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -325,7 +340,7 @@ export default function PerfBalanceHistoryChart({
                       x={margin.left - 10}
                       y={lvl.yPos + 4}
                       textAnchor="end"
-                      className="fill-slate-500 font-bold text-[10px]"
+                      className="fill-slate-500 font-semibold text-[9px]"
                     >
                       {lvl.perfVal.toFixed(1)}%
                     </text>
@@ -335,7 +350,7 @@ export default function PerfBalanceHistoryChart({
                       x={chartWidth - margin.right + 10}
                       y={lvl.yPos + 4}
                       textAnchor="start"
-                      className="fill-slate-500 font-bold text-[10px]"
+                      className="fill-slate-500 font-semibold text-[9px]"
                     >
                       ${(lvl.valMarket / 1000000).toFixed(2)}M
                     </text>
@@ -348,7 +363,7 @@ export default function PerfBalanceHistoryChart({
                   y={chartHeight / 2}
                   textAnchor="middle"
                   transform={`rotate(-90, 10, ${chartHeight / 2})`}
-                  className="fill-slate-400 font-bold text-[10px] uppercase tracking-wider"
+                  className="fill-slate-400 font-semibold text-[9px] uppercase tracking-wider"
                 >
                   Performance
                 </text>
@@ -357,7 +372,7 @@ export default function PerfBalanceHistoryChart({
                   y={chartHeight / 2}
                   textAnchor="middle"
                   transform={`rotate(90, ${chartWidth - 10}, ${chartHeight / 2})`}
-                  className="fill-slate-400 font-bold text-[10px] uppercase tracking-wider"
+                  className="fill-slate-400 font-semibold text-[9px] uppercase tracking-wider"
                 >
                   Market Value
                 </text>
@@ -365,8 +380,8 @@ export default function PerfBalanceHistoryChart({
                 {/* BARS: Market Value (#051a36) */}
                 {points.map((pt) => {
                   const barW = Math.max(
-                    6,
-                    Math.min(8, innerWidth / (points.length * 4)),
+                    3,
+                    Math.min(4.5, innerWidth / (points.length * 7)),
                   );
                   const isHovered = hoveredIdx === pt.idx;
 
@@ -378,8 +393,8 @@ export default function PerfBalanceHistoryChart({
                       width={barW}
                       height={pt.barHeight}
                       fill="#051a36"
-                      rx="3"
-                      ry="3"
+                      rx="2"
+                      ry="2"
                       className="transition-all duration-150 cursor-pointer hover:opacity-90"
                       style={{
                         opacity: hoveredIdx === null || isHovered ? 1 : 0.65,
@@ -394,8 +409,7 @@ export default function PerfBalanceHistoryChart({
                   d={linePathD}
                   fill="none"
                   stroke="#90191b"
-                  // strokeWidth="2.5"
-                  // strokeLinecap="round"
+                  strokeWidth="2"
                   strokeLinejoin="round"
                   className="drop-shadow-xs"
                 />
@@ -403,8 +417,10 @@ export default function PerfBalanceHistoryChart({
                 {/* X-Axis Date Labels */}
                 {points.map((pt) => {
                   const isHovered = hoveredIdx === pt.idx;
-                  const dateStr = pt.dateLabel;
-                  const parts = dateStr.split(" ");
+                  const labelText = formatXAxisDate(
+                    pt.item.transactionDate,
+                    points.length,
+                  );
 
                   return (
                     <g key={`x-${pt.idx}`}>
@@ -412,14 +428,14 @@ export default function PerfBalanceHistoryChart({
                         x={pt.x}
                         y={chartHeight - margin.bottom + 18}
                         textAnchor="middle"
-                        className={` text-[9.5px] transition-colors gap-2 cursor-pointer ${
+                        className={`text-[8.5px] transition-colors cursor-pointer ${
                           isHovered
-                            ? "fill-blue-600 font-extrabold text-[10.5px]"
-                            : "fill-slate-600"
+                            ? "fill-blue-600 font-extrabold text-[9.5px]"
+                            : "fill-slate-600 font-medium"
                         }`}
                         onMouseEnter={() => setHoveredIdx(pt.idx)}
                       >
-                        {parts[0]} {parts[1]} {parts[2]}
+                        {labelText}
                       </text>
                     </g>
                   );

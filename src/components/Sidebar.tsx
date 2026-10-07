@@ -101,11 +101,13 @@ export const renderMenuIcon = (
   return <Circle className={className} />;
 };
 
-// Helper function to format the menu URL to an app router path
 export const getMenuHref = (toURL: string): string => {
   const cleanUrl = toURL.trim().toLowerCase().replace(/\s+/g, "-");
   if (cleanUrl === "dashboard" || cleanUrl === "" || cleanUrl === "/") {
     return "/screens";
+  }
+  if (cleanUrl === "allocation" || cleanUrl === "allocations") {
+    return "/screens/allocations";
   }
   return `/screens/${cleanUrl}`;
 };
@@ -146,25 +148,9 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
     async function loadMenu() {
       setIsLoading(true);
       const res = await fetchProductMenuList(client?.clientID);
-      let items: ProductMenuItem[] = res.ok && res.data ? res.data : [];
-      const hasAllocationTest = items.some(
-        (item) =>
-          item.toURL?.toLowerCase().replace(/\s+/g, "-") === "allocation-test" ||
-          item.webPageFile?.toLowerCase() === "allocation test",
-      );
-      if (!hasAllocationTest) {
-        items = [
-          ...items,
-          {
-            clientID: client?.clientID,
-            webPageFile: "Allocation Test",
-            webPageStatus: "Y",
-            icon: "allocation",
-            toURL: "allocation-test",
-          },
-        ];
+      if (res.ok && res.data) {
+        setMenuItems(res.data);
       }
-      setMenuItems(items);
       setIsLoading(false);
     }
 

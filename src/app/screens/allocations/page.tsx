@@ -449,15 +449,15 @@ export default function AllocationsPage() {
         </div>
 
         {/* Allocation Details Card */}
-        <div className="shrink-0 w-full max-w-full  bg-white border border-slate-200 rounded-xl  overflow-hidden">
-          {/* Form Fields Grid: Labels above inputs, 2 fields per row */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-x-6 gap-y-2 p-2">
-            {/* Row 1 - Field 1: Alloc Type */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-slate-700">
-                Allocation type
+        <div className="shrink-0 w-full max-w-full bg-white border border-slate-200 rounded-xl overflow-hidden p-3 shadow-xs">
+          {/* Form Fields Grid: 20% Allocation Type, 40% Fund, 20% Last Fund Price Date, 20% Allocation Date */}
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-4 w-full">
+            {/* Field 1: Alloc Type (20%) */}
+            <div className="md:col-span-3 flex flex-col gap-1.5 min-w-0">
+              <label className="text-xs font-semibold text-slate-700 truncate">
+                Allocation Type
               </label>
-              <div className="w-full">
+              <div className="w-full min-w-0">
                 <PopoverSelect
                   value={selectedAllocType}
                   options={allocTypeOptions}
@@ -466,14 +466,14 @@ export default function AllocationsPage() {
                   }
                   onChange={(val) => handleAllocTypeChange(val)}
                   disabled={isLoadingAllocTypes}
-                  className="h-7 border-slate-200 rounded-lg text-xs"
+                  className="h-7 w-full border-slate-200 rounded-lg text-xs"
                 />
               </div>
             </div>
 
-            {/* Row 1 - Field 2: Fund */}
-            <div className="flex flex-col gap-1.5 min-w-0">
-              <label className="text-xs font-semibold text-slate-700">
+            {/* Field 2: Fund (40%) */}
+            <div className="md:col-span-4 flex flex-col gap-1.5 min-w-0">
+              <label className="text-xs font-semibold text-slate-700 truncate">
                 Fund
               </label>
               <div className="w-full min-w-0">
@@ -483,17 +483,17 @@ export default function AllocationsPage() {
                   placeholder={isLoadingFunds ? "Loading..." : "Select Fund"}
                   onChange={(val) => handleFundChange(val)}
                   disabled={isLoadingFunds}
-                  className="h-7 border-slate-200 rounded-lg text-xs"
+                  className="h-7 w-full border-slate-200 rounded-lg text-xs"
                 />
               </div>
             </div>
 
-            {/* Row 2 - Field 1: Last Fund Price Date */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-slate-700">
+            {/* Field 3: Last Fund Price Date (20%) */}
+            <div className="md:col-span-3 flex flex-col gap-1.5 min-w-0">
+              <label className="text-xs font-semibold text-slate-700 truncate">
                 Last Fund Price Date
               </label>
-              <div className="w-full">
+              <div className="w-full min-w-0">
                 <Popover
                   open={isLastPriceCalendarOpen}
                   onOpenChange={setIsLastPriceCalendarOpen}
@@ -505,12 +505,12 @@ export default function AllocationsPage() {
                       value={lastFundPriceDate}
                       placeholder="MM/DD/YYYY"
                       onClick={() => setIsLastPriceCalendarOpen(true)}
-                      className="w-full h-7 rounded-lg border border-slate-200 bg-slate-50/80 pl-3 pr-9 text-xs text-slate-600 focus:outline-none cursor-pointer"
+                      className="w-full h-7 rounded-lg border border-slate-200 bg-slate-50/80 pl-3 pr-8 text-xs text-slate-600 focus:outline-none cursor-pointer"
                     />
                     <PopoverTrigger asChild>
                       <button
                         type="button"
-                        className="absolute right-3 text-slate-400 hover:text-slate-600 focus:outline-none flex items-center justify-center p-0.5"
+                        className="absolute right-2.5 text-slate-400 hover:text-slate-600 focus:outline-none flex items-center justify-center p-0.5"
                         title="Open calendar"
                       >
                         <CalendarIcon size={14} />
@@ -540,12 +540,12 @@ export default function AllocationsPage() {
               </div>
             </div>
 
-            {/* Row 2 - Field 2: Alloc Date */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-slate-700">
+            {/* Field 4: Alloc Date (20%) */}
+            <div className="md:col-span-2 flex flex-col gap-1.5 min-w-0">
+              <label className="text-xs font-semibold text-slate-700 truncate">
                 Allocation Date
               </label>
-              <div className="w-full">
+              <div className="w-full min-w-0">
                 <Popover
                   open={isAllocDateCalendarOpen}
                   onOpenChange={setIsAllocDateCalendarOpen}
@@ -556,12 +556,12 @@ export default function AllocationsPage() {
                       value={allocDate}
                       onChange={(e) => setAllocDate(e.target.value)}
                       placeholder="MM/DD/YYYY"
-                      className="w-full h-7 rounded-lg border border-slate-200 bg-white pl-3 pr-9 text-xs text-slate-800 shadow-2xs focus:border-portal-navy focus:outline-none"
+                      className="w-full h-7 rounded-lg border border-slate-200 bg-white pl-3 pr-8 text-xs text-slate-800 shadow-2xs focus:border-portal-navy focus:outline-none"
                     />
                     <PopoverTrigger asChild>
                       <button
                         type="button"
-                        className="absolute right-3 text-slate-400 hover:text-slate-600 focus:outline-none flex items-center justify-center p-0.5"
+                        className="absolute right-2.5 text-slate-400 hover:text-slate-600 focus:outline-none flex items-center justify-center p-0.5"
                         title="Open calendar"
                       >
                         <CalendarIcon size={14} />
