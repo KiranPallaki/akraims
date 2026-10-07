@@ -50,7 +50,7 @@ export const renderMenuIcon = (
   if (
     name.includes("users") ||
     name.includes("user") ||
-    name.includes("allocations")
+    name.includes("allocation")
   ) {
     return <Users className={className} />;
   }
@@ -146,9 +146,25 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
     async function loadMenu() {
       setIsLoading(true);
       const res = await fetchProductMenuList(client?.clientID);
-      if (res.ok && res.data) {
-        setMenuItems(res.data);
+      let items: ProductMenuItem[] = res.ok && res.data ? res.data : [];
+      const hasAllocationTest = items.some(
+        (item) =>
+          item.toURL?.toLowerCase().replace(/\s+/g, "-") === "allocation-test" ||
+          item.webPageFile?.toLowerCase() === "allocation test",
+      );
+      if (!hasAllocationTest) {
+        items = [
+          ...items,
+          {
+            clientID: client?.clientID,
+            webPageFile: "Allocation Test",
+            webPageStatus: "Y",
+            icon: "allocation",
+            toURL: "allocation-test",
+          },
+        ];
       }
+      setMenuItems(items);
       setIsLoading(false);
     }
 

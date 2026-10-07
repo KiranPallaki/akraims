@@ -609,7 +609,7 @@ export default function AllocationsPage() {
                   No transaction codes found.
                 </div>
               ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 pb-2">
+                <div className="grid grid-cols-1 lg:grid-cols-1 gap-4 pb-2 max-w-3xl">
                   {(["Income", "Expenses", "Gain/Loss", "Other"] as const).map(
                     (category) => {
                       const items = groupedTransactionCodes[category];
@@ -618,14 +618,14 @@ export default function AllocationsPage() {
                       return (
                         <div
                           key={category}
-                          className="bg-white border border-slate-200 rounded-xl  shadow-2xs px-4 py-2 flex flex-col justify-between"
+                          className="bg-white border border-slate-200 rounded-xl shadow-2xs px-4 py-2 flex flex-col justify-between"
                         >
                           {/* border border-slate-200 rounded-xl */}
                           <div>
                             <h3 className="text-[14px] font-bold text-slate-900 border-b border-slate-100 pb-2 mb-2">
                               {category}
                             </h3>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-x-4 gap-y-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-2 gap-x-4 gap-y-3">
                               {items.map((item, idx) => {
                                 const key =
                                   item.transactionCode ||

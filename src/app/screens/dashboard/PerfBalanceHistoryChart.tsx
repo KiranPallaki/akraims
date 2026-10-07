@@ -10,7 +10,7 @@ interface PerfBalanceHistoryChartProps {
   isLoading?: boolean;
 }
 
-type TimeRange = "MTD" | "3M" | "6M" | "YTD" | "1Y";
+type TimeRange = "MTD" | "3M" | "6M" | "YTD" | "1Y" | "YEAR";
 
 function formatOrdinalDate(dateStr?: string): string {
   if (!dateStr) return "";
@@ -26,7 +26,7 @@ function formatOrdinalDate(dateStr?: string): string {
   else if (day === 2 || day === 22) suffix = "nd";
   else if (day === 3 || day === 23) suffix = "rd";
 
-  return `${monthName} ${day}${suffix} ${year}`;
+  return `${monthName} ${day}${suffix} '${year}`;
 }
 
 const formatCurrency = (val: number): string => {
@@ -50,6 +50,7 @@ export default function PerfBalanceHistoryChart({
     x: number;
     y: number;
   } | null>(null);
+
   const availableYears = useMemo(() => {
     const years = items
       .map((item) => new Date(item.transactionDate ?? 0).getFullYear())
@@ -58,41 +59,58 @@ export default function PerfBalanceHistoryChart({
     return Array.from(new Set(years)).sort((a, b) => b - a);
   }, [items]);
 
-  // Filter items based on selected time range
-  const filteredData = useMemo(() => {
+  // Chronologically sorted items across all years
+  const allSorted = useMemo(() => {
     if (!items || items.length === 0) return [];
-
-    const sorted = [...items]
-      .filter(
-        (item) =>
-          new Date(item.transactionDate ?? 0).getFullYear() === selectedYear,
-      )
+    return [...items]
+      .filter((item) => item.transactionDate)
       .sort(
         (a, b) =>
           new Date(a.transactionDate ?? 0).getTime() -
           new Date(b.transactionDate ?? 0).getTime(),
       );
+  }, [items]);
+
+  // Filter items based on selected time range (Default "1Y" = 1 year back from today/latest date, e.g. Oct 2025 to Oct 2026)
+  const filteredData = useMemo(() => {
+    if (allSorted.length === 0) return [];
+
+    const latestItemDate = new Date(
+      allSorted[allSorted.length - 1].transactionDate!,
+    );
 
     switch (timeRange) {
       case "MTD":
-        return sorted.slice(-1);
+        return allSorted.slice(-1);
       case "3M":
-        return sorted.slice(-3);
+        return allSorted.slice(-3);
       case "6M":
-        return sorted.slice(-6);
+        return allSorted.slice(-6);
       case "YTD": {
-        const latestYear = new Date(
-          sorted[sorted.length - 1]?.transactionDate ?? Date.now(),
-        ).getFullYear();
-        return sorted.filter(
+        const latestYear = latestItemDate.getFullYear();
+        return allSorted.filter(
           (i) => new Date(i.transactionDate ?? 0).getFullYear() === latestYear,
         );
       }
+      case "YEAR": {
+        return allSorted.filter(
+          (i) =>
+            new Date(i.transactionDate ?? 0).getFullYear() === selectedYear,
+        );
+      }
       case "1Y":
-      default:
-        return sorted.slice(-12);
+      default: {
+        // 1Y (default filter): From latest date back 1 year (12 months), e.g., Oct 2025 to Oct 2026
+        const oneYearAgo = new Date(latestItemDate);
+        oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+
+        const inRange = allSorted.filter(
+          (i) => new Date(i.transactionDate ?? 0) >= oneYearAgo,
+        );
+        return inRange.length > 0 ? inRange : allSorted.slice(-12);
+      }
     }
-  }, [items, timeRange, selectedYear]);
+  }, [allSorted, timeRange, selectedYear]);
 
   // Scaler Calculations for SVG Chart
   const chartWidth = 720;
@@ -234,10 +252,19 @@ export default function PerfBalanceHistoryChart({
             })}
           </div>
           <select
-            value={selectedYear}
-            onChange={(e) => setSelectedYear(Number(e.target.value))}
-            className="h-8 rounded-lg border border-slate-200 bg-slate-50/80 px-2 text-xs font-semibold text-slate-600 outline-none"
+            value={timeRange === "YEAR" ? selectedYear : ""}
+            onChange={(e) => {
+              const yr = Number(e.target.value);
+              if (yr) {
+                setSelectedYear(yr);
+                setTimeRange("YEAR");
+              }
+            }}
+            className="h-8 rounded-lg border border-slate-200 bg-slate-50/80 px-2 text-xs font-semibold text-slate-600 outline-none cursor-pointer"
           >
+            <option value="" disabled hidden>
+              Select Year
+            </option>
             {availableYears.map((year) => (
               <option key={year} value={year}>
                 {year}
