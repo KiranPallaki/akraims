@@ -66,11 +66,11 @@ export default function PopoverSelect({
           type="button"
           disabled={disabled}
           className={cn(
-            "flex h-7 w-full min-w-0 items-center justify-between rounded-md border border-slate-300 bg-white px-3 py-2 text-xs sm:text-[12px] text-slate-800 shadow-2xs transition-colors hover:bg-slate-50/80 focus:border-portal-navy focus:outline-none disabled:cursor-not-allowed disabled:opacity-50",
+            "flex h-8 w-full min-w-0 items-center justify-between rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-normal text-slate-800 shadow-2xs transition-colors hover:bg-slate-50/80 focus:border-portal-navy focus:outline-none disabled:cursor-not-allowed disabled:opacity-50",
             className,
           )}
         >
-          <span className="truncate text-left flex-1 min-w-0">
+          <span className="truncate text-[12px] text-left flex-1 min-w-0">
             {selectedOption ? selectedOption.label : placeholder}
           </span>
           <ChevronDown className="ml-2 h-4 w-4 shrink-0 text-slate-400" />
@@ -107,17 +107,17 @@ export default function PopoverSelect({
                   type="button"
                   onClick={() => handleSelect(option.value)}
                   className={cn(
-                    "flex w-full items-center justify-between rounded-md px-3 py-1.5 text-xs sm:text-sm text-slate-700 transition-colors text-left hover:bg-slate-100 hover:text-slate-900",
-                    isSelected && "bg-slate-100 font-semibold text-portal-navy",
+                    "flex w-full items-center justify-between rounded-md px-3 py-1.5 text-[12px] sm:text-[12px] text-slate-700 transition-colors text-left hover:bg-slate-100 hover:text-slate-900",
+                    isSelected && "bg-slate-100  text-portal-navy",
                   )}
                 >
                   <div className="truncate pr-2">
                     <span>{option.label}</span>
-                    {option.sublabel && (
+                    {/* {option.sublabel && (
                       <span className="ml-1.5 text-[11px] text-slate-400">
                         {option.sublabel}
                       </span>
-                    )}
+                    )} */}
                   </div>
                   {isSelected && (
                     <Check className="h-3.5 w-3.5 text-portal-navy shrink-0" />

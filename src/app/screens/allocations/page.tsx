@@ -695,14 +695,14 @@ export default function AllocationsPage() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="rounded-md bg-[#051a39] px-6 py-2 text-xs sm:text-sm font-semibold text-white shadow-sm hover:bg-white hover:text-[#051a36]/80 active:opacity-90 transition-colors disabled:opacity-50"
+            className="rounded-md bg-portal-navy px-6 py-2 text-xs sm:text-sm font-semibold text-white shadow-sm hover:bg-portal-navy-hover active:opacity-90 transition-colors disabled:opacity-50"
           >
             {isSubmitting ? "Submitting..." : "Submit"}
           </button>
           <button
             type="button"
             onClick={handleCancel}
-            className="text-xs sm:text-sm font-medium text-[#051a39] hover:text-[#051a39]/80 hover:underline transition-colors"
+            className="text-xs sm:text-sm font-medium text-portal-navy hover:underline transition-colors"
           >
             Cancel
           </button>

@@ -1,5 +1,6 @@
 import { apiClient } from "@/lib/api";
 import { getSelectedClient } from "@/stores/authStore";
+import { formatDate } from "@/lib/dateUtils";
 import {
   AllocTypeItem,
   FundItem,
@@ -8,14 +9,7 @@ import {
 } from "./types";
 
 export function formatDateToMMDDYYYY(dateStr?: string | null): string {
-  if (!dateStr) return "";
-  const cleanStr = String(dateStr).trim().split("T")[0];
-  const parts = cleanStr.split("-");
-  if (parts.length === 3 && parts[0].length === 4) {
-    const [year, month, day] = parts;
-    return `${month.padStart(2, "0")}/${day.padStart(2, "0")}/${year}`;
-  }
-  return dateStr;
+  return formatDate(dateStr);
 }
 
 export async function fetchAllocTypes(

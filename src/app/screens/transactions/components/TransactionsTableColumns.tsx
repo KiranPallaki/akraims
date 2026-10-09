@@ -2,6 +2,7 @@ import React, { useMemo } from "react";
 import { ColumnDef } from "@tanstack/react-table";
 import { TransactionsTransactionItem, TransactionsTabType } from "../types";
 import { SquarePen, Trash2 } from "lucide-react";
+import { formatDate } from "@/lib/dateUtils";
 
 function truncateText(str: string, maxLen: number = 40): string {
   if (!str || str.length <= maxLen) return str;
@@ -98,7 +99,7 @@ export function useTransactionColumns({
         accessorFn: (row) => row.transactionDate || "",
         cell: ({ row }) => {
           const raw = row.original.transactionDate || "";
-          const formattedDate = raw ? raw.split("T")[0] : "-";
+          const formattedDate = raw ? formatDate(raw) : "-";
           return <span className="text-slate-600">{formattedDate}</span>;
         },
       },

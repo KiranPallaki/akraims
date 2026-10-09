@@ -1,5 +1,6 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { formatDate } from "./dateUtils";
 
 export interface ExportPDFOptions {
   fileName: string;
@@ -38,7 +39,9 @@ export function exportTableToPDF({
   doc.setFontSize(9);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(100, 116, 139); // slate-500
-  const dateStr = `Generated on: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`;
+  const now = new Date();
+  const formattedNow = formatDate(now);
+  const dateStr = `Generated on: ${formattedNow} ${now.toLocaleTimeString()}`;
   const subText = subtitle ? `${subtitle}  |  ${dateStr}` : dateStr;
   doc.text(subText, 14, 21);
 

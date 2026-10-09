@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getSelectedClient } from "@/stores/authStore";
+import { formatDate } from "@/lib/dateUtils";
 import { Client } from "@/types/client";
 import {
   fetchTransactionsData,
@@ -151,7 +152,9 @@ export default function TransactionsPage() {
       const name = `"${(row.participantName || row.accountName || "").replace(/"/g, '""')}"`;
       const fund = `"${(row.fund || row.fundName || "").replace(/"/g, '""')}"`;
       const code = `"${(row.transactionCodeDesc || row.transactionCode || "").replace(/"/g, '""')}"`;
-      const date = `"${(row.transactionDate || "").split("T")[0]}"`;
+      const rawDate = row.transactionDate || "";
+      const formattedDate = formatDate(rawDate);
+      const date = `"${formattedDate}"`;
       const amt = row.transactionAmount ?? row.amount ?? 0;
       const units = row.transactionUnits ?? "";
       const fee = row.feeAmount ?? 0;
@@ -192,25 +195,29 @@ export default function TransactionsPage() {
       "Notes",
     ];
 
-    const pdfRows = filteredData.map((row) => [
-      String(row.transactionID ?? ""),
-      row.participantName || row.accountName || "",
-      row.fund || row.fundName || "",
-      row.transactionCodeDesc || row.transactionCode || "",
-      (row.transactionDate || "").split("T")[0],
-      (row.transactionAmount ?? row.amount ?? 0).toLocaleString("en-US", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      }),
-      row.transactionUnits !== undefined && row.transactionUnits !== null
-        ? String(row.transactionUnits)
-        : "",
-      (row.feeAmount ?? 0).toLocaleString("en-US", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      }),
-      row.notes || "",
-    ]);
+    const pdfRows = filteredData.map((row) => {
+      const rawDate = row.transactionDate || "";
+      const formattedDate = formatDate(rawDate);
+      return [
+        String(row.transactionID ?? ""),
+        row.participantName || row.accountName || "",
+        row.fund || row.fundName || "",
+        row.transactionCodeDesc || row.transactionCode || "",
+        formattedDate,
+        (row.transactionAmount ?? row.amount ?? 0).toLocaleString("en-US", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }),
+        row.transactionUnits !== undefined && row.transactionUnits !== null
+          ? String(row.transactionUnits)
+          : "",
+        (row.feeAmount ?? 0).toLocaleString("en-US", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }),
+        row.notes || "",
+      ];
+    });
 
     exportTableToPDF({
       fileName: `${activeTab}_${new Date().toISOString().slice(0, 10)}.pdf`,

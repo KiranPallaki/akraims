@@ -60,11 +60,11 @@ export default function TextFilterPopover({
   return (
     <div
       ref={popoverRef}
-      className="absolute right-0 top-full mt-2 z-50 w-72 sm:w-80 rounded-xl border border-slate-200 bg-white p-4 shadow-2xl text-slate-800 text-xs animate-in fade-in zoom-in-95 duration-150"
+      className="absolute right-0 top-full mt-2 z-50 w-72 sm:w-80 rounded-xl border border-slate-200 bg-white p-4 shadow-2xl text-slate-800 text-[12px] font-normal animate-in fade-in zoom-in-95 duration-150"
       onClick={(e) => e.stopPropagation()}
     >
       <div className="flex items-center justify-between border-b border-slate-100 pb-2 mb-3">
-        <span className="font-bold text-slate-900 text-xs sm:text-sm">
+        <span className="font-normal text-slate-900 text-[12px]">
           Filter {columnTitle}
         </span>
         <button
@@ -78,7 +78,7 @@ export default function TextFilterPopover({
       <div className="space-y-3">
         {/* Match Mode Options */}
         <div>
-          <label className="block text-[11px] font-semibold text-slate-600 mb-1.5 uppercase tracking-wider">
+          <label className="block text-[12px] font-normal text-slate-600 mb-1.5 uppercase tracking-wider">
             Match Condition
           </label>
           <div className="grid grid-cols-2 gap-1.5">
@@ -92,14 +92,14 @@ export default function TextFilterPopover({
                 key={opt.id}
                 type="button"
                 onClick={() => setMode(opt.id as TextMatchMode)}
-                className={`px-2.5 py-1.5 rounded-lg text-xs font-medium border text-left transition-colors flex items-center justify-between ${
+                className={`px-2.5 py-1.5 rounded-lg text-[12px] font-normal border text-left transition-colors flex items-center justify-between ${
                   mode === opt.id
-                    ? "bg-blue-50 border-blue-500 text-blue-700 font-semibold"
+                    ? "bg-[#051a36]/10 border-[#051a36] text-[#051a36]"
                     : "bg-slate-50/70 border-slate-200 text-slate-700 hover:bg-slate-100"
                 }`}
               >
                 <span>{opt.label}</span>
-                {mode === opt.id && <Check className="h-3 w-3 text-blue-600" />}
+                {mode === opt.id && <Check className="h-3 w-3 text-[#051a36]" />}
               </button>
             ))}
           </div>
@@ -107,7 +107,7 @@ export default function TextFilterPopover({
 
         {/* Text Input */}
         <div>
-          <label className="block text-[11px] font-semibold text-slate-600 mb-1 uppercase tracking-wider">
+          <label className="block text-[12px] font-normal text-slate-600 mb-1 uppercase tracking-wider">
             Search Text
           </label>
           <input
@@ -117,7 +117,7 @@ export default function TextFilterPopover({
             onKeyDown={(e) => e.key === "Enter" && handleApply()}
             placeholder={`Search ${columnTitle.toLowerCase()}...`}
             autoFocus
-            className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-normal"
+            className="w-full text-[12px] px-3 py-2 border border-slate-200 rounded-lg bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#051a36]/20 font-normal"
           />
         </div>
 
@@ -126,14 +126,14 @@ export default function TextFilterPopover({
           <button
             type="button"
             onClick={handleClear}
-            className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 font-medium text-xs transition-colors"
+            className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 font-normal text-[12px] transition-colors"
           >
             Clear
           </button>
           <button
             type="button"
             onClick={handleApply}
-            className="px-3.5 py-1.5 rounded-lg bg-blue-600 text-white hover:bg-blue-700 font-semibold text-xs transition-colors shadow-xs"
+            className="px-3.5 py-1.5 rounded-lg bg-[#051a36] text-white hover:bg-[#092b57] font-normal text-[12px] transition-colors shadow-xs"
           >
             Apply Filter
           </button>

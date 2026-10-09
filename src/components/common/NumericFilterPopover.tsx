@@ -84,11 +84,11 @@ export default function NumericFilterPopover({
   return (
     <div
       ref={popoverRef}
-      className="absolute right-0 top-full mt-2 z-50 w-72 sm:w-80 rounded-xl border border-slate-200 bg-white p-4 shadow-2xl text-slate-800 text-xs animate-in fade-in zoom-in-95 duration-150"
+      className="absolute right-0 top-full mt-2 z-50 w-72 sm:w-80 rounded-xl border border-slate-200 bg-white p-4 shadow-2xl text-slate-800 text-[12px] font-normal animate-in fade-in zoom-in-95 duration-150"
       onClick={(e) => e.stopPropagation()}
     >
       <div className="flex items-center justify-between border-b border-slate-100 pb-2 mb-3">
-        <span className="font-bold text-slate-900 text-xs sm:text-sm">
+        <span className="font-normal text-slate-900 text-[12px]">
           Filter {columnTitle} (Unique Values)
         </span>
         <button
@@ -107,12 +107,12 @@ export default function NumericFilterPopover({
             onChange={setSearchQuery}
             placeholder="Search values..."
             size="sm"
-            className="flex-1"
+            className="flex-1 text-[12px]"
           />
           <button
             type="button"
             onClick={toggleSelectAll}
-            className="text-[11px] font-semibold text-blue-600 hover:text-blue-800 flex-shrink-0"
+            className="text-[12px] font-normal text-[#051a36] hover:underline flex-shrink-0"
           >
             {selected.length === uniqueValues.length
               ? "Deselect All"
@@ -123,7 +123,7 @@ export default function NumericFilterPopover({
         {/* Scrollable Checkbox List */}
         <div className="max-h-48 overflow-y-auto border border-slate-100 rounded-lg divide-y divide-slate-100 p-1 bg-slate-50/50">
           {filteredValues.length === 0 ? (
-            <div className="py-4 text-center text-slate-400 text-xs">
+            <div className="py-4 text-center text-slate-400 text-[12px] font-normal">
               No values match filter.
             </div>
           ) : (
@@ -132,8 +132,8 @@ export default function NumericFilterPopover({
               return (
                 <label
                   key={val}
-                  className={`flex items-center justify-between px-2.5 py-1.5 rounded cursor-pointer transition-colors ${
-                    checked ? "bg-blue-50/60" : "hover:bg-slate-100/80"
+                  className={`flex items-center justify-between px-2.5 py-1.5 rounded cursor-pointer transition-colors text-[12px] ${
+                    checked ? "bg-[#051a36]/10 text-[#051a36]" : "hover:bg-slate-100/80"
                   }`}
                 >
                   <div className="flex items-center gap-2 min-w-0">
@@ -141,9 +141,9 @@ export default function NumericFilterPopover({
                       type="checkbox"
                       checked={checked}
                       onChange={() => toggleItem(val)}
-                      className="h-3.5 w-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                      className="h-3.5 w-3.5 rounded border-slate-300 text-[#051a36] focus:ring-[#051a36]"
                     />
-                    <span className="font-semibold text-slate-800 truncate">
+                    <span className="font-normal text-slate-800 truncate text-[12px]">
                       {formatFn(val)}
                     </span>
                   </div>
@@ -158,14 +158,14 @@ export default function NumericFilterPopover({
           <button
             type="button"
             onClick={handleClear}
-            className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 font-medium text-xs transition-colors"
+            className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 font-normal text-[12px] transition-colors"
           >
             Clear
           </button>
           <button
             type="button"
             onClick={handleApply}
-            className="px-3.5 py-1.5 rounded-lg bg-blue-600 text-white hover:bg-blue-700 font-semibold text-xs transition-colors shadow-xs"
+            className="px-3.5 py-1.5 rounded-lg bg-[#051a36] text-white hover:bg-[#092b57] font-normal text-[12px] transition-colors shadow-xs"
           >
             Apply Filter
           </button>

@@ -22,6 +22,8 @@ import FundPerformanceTable from "@/app/screens/dashboard/FundPerformanceTable";
 import FundStatementTable from "@/app/screens/dashboard/FundStatementTable";
 import { Activity, DollarSign, Percent, TrendingUp } from "lucide-react";
 
+import { formatDate } from "@/lib/dateUtils";
+
 export default function DashboardPage() {
   const [client, setClient] = useState<Client | null>(null);
   const [userName, setUserName] = useState<string>("User");
@@ -140,7 +142,7 @@ export default function DashboardPage() {
           </div>
           {netActivity?.endDate && (
             <span className="text-xs text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full self-start sm:self-auto border border-slate-200">
-              As of {new Date(netActivity.endDate).toLocaleDateString()}
+              As of {formatDate(netActivity.endDate)}
             </span>
           )}
         </div>

@@ -8,6 +8,7 @@
   --font-sans:
     "Inter", "Geist", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
     "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --text-xs: clamp(0.75rem, 0.55rem + 0.8vw, 0.9375rem);
 }
 
 @theme inline {
@@ -105,8 +106,8 @@
   /* Portal Brand Colors - Light Mode */
   --portal-primary: #90191b;
   --portal-secondary: #7a1517;
-  --portal-accent: #051a39;
-  --portal-navy: #051a39;
+  --portal-accent: #051a36;
+  --portal-navy: #051a36;
   --portal-navy-hover: #092b57;
   --portal-light: #0a2a4a;
   --portal-success: #10b981;
@@ -178,6 +179,30 @@
   [type="reset"] {
     cursor: pointer;
   }
+  button[type="submit"],
+  [type="submit"],
+  .btn-primary,
+  .btn-navy {
+    background-color: var(--portal-navy, #051a39);
+    color: #ffffff;
+    transition:
+      background-color 0.2s ease-in-out,
+      opacity 0.2s ease-in-out;
+  }
+  button[type="submit"]:hover,
+  [type="submit"]:hover,
+  .btn-primary:hover,
+  .btn-navy:hover {
+    background-color: var(--portal-navy-hover, #092b57);
+    color: #ffffff;
+  }
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea {
+    height: 2rem;
+    font-size: var(--text-xs);
+    font-weight: 400 !important;
+  }
 }
 
 /* Reusable Classes for Sidebar Navigation */
@@ -230,14 +255,16 @@
   button {
     display: none !important;
   }
-  body, main {
+  body,
+  main {
     background: #ffffff !important;
     color: #000000 !important;
     margin: 0 !important;
     padding: 0 !important;
     width: 100% !important;
   }
-  .table-container, table {
+  .table-container,
+  table {
     max-height: none !important;
     overflow: visible !important;
     width: 100% !important;

@@ -54,7 +54,7 @@ export default function ParticipantPage() {
           </p>
         </div>
 
-        <button className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors self-start sm:self-auto">
+        <button className="flex items-center gap-2 rounded-lg bg-[var(--portal-navy,#051a39)] px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-[var(--portal-navy-hover,#092b57)] transition-colors self-start sm:self-auto">
           <UserPlus size={16} /> Add Participant
         </button>
       </div>
