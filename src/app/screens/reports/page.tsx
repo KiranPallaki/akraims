@@ -91,7 +91,7 @@ export default function ReportsPage() {
       )}
 
       {/* Main Grid: Left = Report Listing Table, Right = Dynamic Report Parameter Form */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-2 items-start">
         {/* Left Column: Report Listing Table (7 cols) */}
         <div className="lg:col-span-7">
           <ReportListingTable

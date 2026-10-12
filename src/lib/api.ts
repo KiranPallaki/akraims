@@ -26,9 +26,15 @@ export async function apiClient(
   if (!API_BASE_URL && !endpoint.startsWith("http")) {
     throw new Error("NEXT_PUBLIC_API_BASE_URL is not configured");
   }
+  let cleanEndpoint = endpoint.startsWith("http")
+    ? endpoint
+    : endpoint.replace(/^\//, "");
+  if (API_BASE_URL.endsWith("/api") && cleanEndpoint.startsWith("api/")) {
+    cleanEndpoint = cleanEndpoint.replace(/^api\//, "");
+  }
   const url = endpoint.startsWith("http")
     ? endpoint
-    : `${API_BASE_URL.replace(/\/$/, "")}/${endpoint.replace(/^\//, "")}`;
+    : `${API_BASE_URL.replace(/\/$/, "")}/${cleanEndpoint}`;
 
   const headers: Record<string, string> = {
     "Content-Type": "application/json",

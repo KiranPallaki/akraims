@@ -329,7 +329,7 @@ export default function StatementsPage() {
         <button
           type="button"
           onClick={() => setActiveTab("statements")}
-          className={`flex items-center gap-2 px-3 py-2 text-xs font-semibold rounded-md  transition-all  ${
+          className={`flex items-center gap-2 px-2 py-1 text-xs font-semibold rounded-md  transition-all  ${
             activeTab === "statements"
               ? "bg-[#051a36] text-white shadow-md"
               : "bg-slate-100 text-slate-700 hover:bg-slate-200 hover:text-slate-900 border border-slate-200"
@@ -342,7 +342,7 @@ export default function StatementsPage() {
         <button
           type="button"
           onClick={() => setActiveTab("adminStatements")}
-          className={`flex items-center gap-2 px-3 py-2 text-xs font-semibold rounded-md transition-all  ${
+          className={`flex items-center gap-2 px-2 py-1 text-xs font-semibold rounded-md transition-all  ${
             activeTab === "adminStatements"
               ? "bg-[#051a36] text-white shadow-md"
               : "bg-slate-100 text-slate-700 hover:bg-slate-200 hover:text-slate-900 border border-slate-200"
@@ -358,9 +358,9 @@ export default function StatementsPage() {
         {/* Controls Bar: Search, Refresh, Export */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-100 pb-3 shrink-0">
           <div className="flex items-center gap-3">
-            <h5 className=" text-[13px] font-semibold text-slate-800 tracking-tight">
+            <div className=" text-[13px] font-semibold text-slate-800 tracking-tight">
               {activeTab === "statements" ? "Statements" : "Admin Statements"}
-            </h5>
+            </div>
           </div>
 
           <div className="flex items-center gap-3">
@@ -373,10 +373,10 @@ export default function StatementsPage() {
               className="w-52 sm:w-64"
             />
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center  font-normal gap-2">
               <button
                 onClick={handleExportCSV}
-                className="p-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition-colors shadow-2xs flex items-center gap-1.5 text-xs font-semibold"
+                className="p-2 rounded-lg border border-slate-200 text-[13px] bg-white hover:bg-slate-50 text-slate-700 transition-colors shadow-2xs flex items-center gap-1.5 text-xs font-normal"
                 title="Export to Excel / CSV"
                 type="button"
               >
@@ -386,7 +386,7 @@ export default function StatementsPage() {
 
               <button
                 onClick={handleExportPDF}
-                className="p-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition-colors shadow-2xs flex items-center gap-1.5 text-xs font-semibold"
+                className="p-2 rounded-lg border border-slate-200 text-[13px] bg-white hover:bg-slate-50 text-slate-700 transition-colors shadow-2xs flex items-center gap-1.5 text-xs font-normal"
                 title="Export to PDF"
                 type="button"
               >

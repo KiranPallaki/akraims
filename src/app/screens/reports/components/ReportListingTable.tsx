@@ -93,10 +93,10 @@ export default function ReportListingTable({
   );
 
   return (
-    <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+    <div className="bg-white border border-slate-100 rounded-md  overflow-hidden">
       {/* Table Header Controls */}
       <div className="p-2 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50/50">
-        <div className="flex items-center gap-2 font-medium text-xs">
+        <div className="flex items-center gap-2 font-medium text-[12px] text-slate-700 tracking-wider">
           <FileText className="h-5 w-5 " />
           <h5 className=" text-slate-800 ">Available Reports</h5>
         </div>

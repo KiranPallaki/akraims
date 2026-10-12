@@ -56,19 +56,19 @@ export default function SearchBar({
 
   const sizeStyles = {
     sm: {
-      container: "h-8",
-      icon: "left-2 top-2 h-3.5 w-3.5",
+      container: "h-7",
+      icon: "left-2 top-2 h-3 w-3",
       input: "pl-7 pr-7 text-xs",
       clear: "right-2 top-2 h-3.5 w-3.5",
     },
     md: {
-      container: "h-9",
-      icon: "left-2.5 top-2.5 h-4 w-4",
+      container: "h-8",
+      icon: "left-2.5 top-2 h-4 w-4",
       input: "pl-8 pr-8 text-xs sm:text-sm",
       clear: "right-2.5 top-2.5 h-4 w-4",
     },
     lg: {
-      container: "h-10",
+      container: "h-9",
       icon: "left-3 top-3 h-4 w-4",
       input: "pl-9 pr-9 text-sm",
       clear: "right-3 top-3 h-4 w-4",

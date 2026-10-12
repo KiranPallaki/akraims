@@ -109,6 +109,19 @@ export const getMenuHref = (toURL: string): string => {
   if (cleanUrl === "allocation" || cleanUrl === "allocations") {
     return "/screens/allocations";
   }
+  if (cleanUrl === "fund" || cleanUrl === "addfund" || cleanUrl === "add-fund") {
+    return "/screens/fund";
+  }
+  if (
+    cleanUrl === "participant" ||
+    cleanUrl === "addparticipant" ||
+    cleanUrl === "add-participant"
+  ) {
+    return "/screens/participant";
+  }
+  if (cleanUrl === "addparticipantfund" || cleanUrl === "add-participant-fund") {
+    return "/screens/fund";
+  }
   return `/screens/${cleanUrl}`;
 };
 
@@ -149,7 +162,31 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
       setIsLoading(true);
       const res = await fetchProductMenuList(client?.clientID);
       if (res.ok && res.data) {
-        setMenuItems(res.data);
+        const transformed: ProductMenuItem[] = [];
+        res.data.forEach((item) => {
+          const clean = item.toURL.trim().toLowerCase();
+          if (
+            clean === "addparticipantfund" ||
+            clean === "add-participant-fund" ||
+            clean === "participantfund"
+          ) {
+            transformed.push({
+              ...item,
+              webPageFile: "Fund",
+              toURL: "fund",
+              icon: "fa-cubes",
+            });
+            transformed.push({
+              ...item,
+              webPageFile: "Participant",
+              toURL: "participant",
+              icon: "fa-users",
+            });
+          } else {
+            transformed.push(item);
+          }
+        });
+        setMenuItems(transformed);
       }
       setIsLoading(false);
     }

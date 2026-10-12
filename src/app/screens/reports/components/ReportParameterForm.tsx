@@ -315,7 +315,7 @@ export default function ReportParameterForm({
   };
 
   return (
-    <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden flex flex-col h-full">
+    <div className="bg-white border border-slate-100 rounded-md  overflow-hidden flex flex-col h-full">
       {/* Form Title Header */}
       <div className="p-4 border-b border-slate-200 bg-slate-50/70 flex items-center justify-between ">
         <div className="flex items-center gap-2 font-medium text-[12px] text-slate-700 tracking-wider">
