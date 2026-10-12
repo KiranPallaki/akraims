@@ -270,27 +270,14 @@ export default function ParticipantPage() {
   return (
     <div className="space-y-4">
       {/* Page Header Card */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 rounded-xl border border-slate-200 bg-white p-5 shadow-xs">
-        <div>
-          <div className="flex items-center gap-2 text-[var(--portal-navy,#051a36)] font-semibold text-xs tracking-wider uppercase">
-            <Users size={16} /> Participant Module
-          </div>
-          <h2 className="mt-1 text-2xl font-bold text-slate-800 tracking-tight">
-            Participant Directory
-          </h2>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Manage client participant accounts and investment fund associations for{" "}
-            <span className="font-semibold text-slate-700">
-              {client?.clientName || "Selected Client"}
-            </span>
-          </p>
-        </div>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end">
+        
 
         <div className="flex items-center gap-2 self-start sm:self-auto">
           <button
             type="button"
             onClick={handleOpenAdd}
-            className="flex items-center gap-1.5 rounded-md bg-portal-navy px-4 py-2 text-xs sm:text-sm font-semibold text-white shadow-sm hover:bg-portal-navy-hover active:opacity-90 transition-colors"
+            className="flex items-center gap-1.5 rounded-md bg-portal-navy px-3 py-2 text-xs sm:text-sm font-semibold text-white shadow-sm hover:bg-portal-navy-hover active:opacity-90 transition-colors"
           >
             <Plus size={16} /> Add Participant
           </button>
@@ -360,6 +347,7 @@ export default function ParticipantPage() {
             columns={columns}
             data={filteredData}
             isLoading={isLoading}
+             enablePagination={false}
             emptyMessage="No participants found."
             containerClassName="border border-slate-200 shadow-2xs"
             headerClassName="bg-slate-50 text-slate-800 border-b border-slate-200 font-semibold"
