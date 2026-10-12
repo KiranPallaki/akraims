@@ -213,7 +213,7 @@ export default function TaskPage() {
             {/* Task Execution Result Grid Component (TableData) */}
             {returnType === "dataprocess" && (
               <div className="w-full">
-                <TableData
+                {/* <TableData
                   getExecuteValue={executeResult}
                   isLoading={isSubmitting}
                   taskTitle={
@@ -221,7 +221,7 @@ export default function TaskPage() {
                       ? `${selectedTask.name} — Execution Results`
                       : "Task Execution Results"
                   }
-                />
+                /> */}
               </div>
             )}
           </div>
