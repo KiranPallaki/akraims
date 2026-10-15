@@ -1,18 +1,23 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import { ParticipantItem, ParticipantFormValues, AssociatedFundItem } from "../types";
+import {
+  ParticipantItem,
+  ParticipantFormValues,
+  AssociatedFundItem,
+} from "../types";
 import PopoverSelect from "@/components/common/PopoverSelect";
 import StandardDatePicker from "@/components/common/StandardDatePicker";
 import SearchBar from "@/components/common/SearchBar";
-import { X, AlertCircle, CheckSquare, Square } from "lucide-react";
+import ConstantMessageBanner from "@/components/common/ConstantMessageBanner";
+import { X, CheckSquare, Square } from "lucide-react";
 
 interface AddParticipantDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (
     values: ParticipantFormValues,
-    initialFundIds: (number | string)[]
+    initialFundIds: (number | string)[],
   ) => Promise<boolean>;
   initialData?: ParticipantItem | null;
   fundOptions: AssociatedFundItem[];
@@ -39,6 +44,9 @@ export default function AddParticipantDrawer({
   apiError,
 }: AddParticipantDrawerProps) {
   const isEditing = Boolean(initialData);
+  const defaultConstantMessage = isEditing
+    ? `Update details and fund associations for ${initialData?.participantName || ""}`.trim()
+    : "Please enter the participant details below";
 
   const [formData, setFormData] = useState<ParticipantFormValues>({
     participantNumber: "",
@@ -52,13 +60,14 @@ export default function AddParticipantDrawer({
 
   const [initialFundIds, setInitialFundIds] = useState<(number | string)[]>([]);
   const [fundSearch, setFundSearch] = useState("");
-  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (initialData) {
       const fundIds = initialData.fundID || [];
       setFormData({
-        participantNumber: initialData.participantNumber || String(initialData.participantID),
+        participantNumber:
+          initialData.participantNumber || String(initialData.participantID),
         participantName: initialData.participantName || "",
         participantType: initialData.participantType || "Plan",
         isActive: (initialData.status || "Active").toLowerCase() === "active",
@@ -80,8 +89,16 @@ export default function AddParticipantDrawer({
       setInitialFundIds([]);
     }
     setFundSearch("");
-    setValidationErrors({});
+    setErrorMessage(null);
   }, [initialData, isOpen, fundOptions]);
+
+  useEffect(() => {
+    if (!isSubmitting && apiError) {
+      setErrorMessage(apiError);
+    } else if (!apiError) {
+      setErrorMessage(null);
+    }
+  }, [apiError, isSubmitting]);
 
   // Filter available funds
   const filteredFunds = useMemo(() => {
@@ -91,13 +108,14 @@ export default function AddParticipantDrawer({
       (f) =>
         f.fundName.toLowerCase().includes(q) ||
         f.fund.toLowerCase().includes(q) ||
-        f.fundType.toLowerCase().includes(q)
+        f.fundType.toLowerCase().includes(q),
     );
   }, [fundOptions, fundSearch]);
 
   if (!isOpen) return null;
 
   const toggleFundSelection = (fundId: number | string) => {
+    if (errorMessage) setErrorMessage(null);
     setFormData((prev) => {
       const exists = prev.selectedFundIds.includes(fundId);
       const updated = exists
@@ -108,6 +126,7 @@ export default function AddParticipantDrawer({
   };
 
   const handleSelectAllFunds = () => {
+    if (errorMessage) setErrorMessage(null);
     if (formData.selectedFundIds.length === fundOptions.length) {
       setFormData((prev) => ({ ...prev, selectedFundIds: [] }));
     } else {
@@ -119,16 +138,23 @@ export default function AddParticipantDrawer({
   };
 
   const validate = (): boolean => {
-    const errors: Record<string, string> = {};
     if (!formData.participantName.trim()) {
-      errors.participantName = "Participant name is required";
+      setErrorMessage("Participant name is required");
+      return false;
     }
     if (!formData.openDate) {
-      errors.openDate = "Open date is required";
+      setErrorMessage("Open date is required");
+      return false;
+    }
+    if (formData.closeDate && formData.openDate) {
+      if (new Date(formData.closeDate) < new Date(formData.openDate)) {
+        setErrorMessage("Close date cannot be earlier than open date");
+        return false;
+      }
     }
 
-    setValidationErrors(errors);
-    return Object.keys(errors).length === 0;
+    setErrorMessage(null);
+    return true;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -136,6 +162,8 @@ export default function AddParticipantDrawer({
     if (!validate()) return;
     await onSubmit(formData, initialFundIds);
   };
+
+  const activeError = errorMessage;
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden">
@@ -170,13 +198,16 @@ export default function AddParticipantDrawer({
           </div>
 
           {/* Form Content */}
-          <form onSubmit={handleSubmit} className="flex-1 p-6 space-y-5">
-            {apiError && (
-              <div className="rounded-lg bg-rose-50 border border-rose-200 p-3 text-xs text-rose-700 flex items-start gap-2">
-                <AlertCircle className="h-4 w-4 text-rose-500 shrink-0 mt-0.5" />
-                <span className="whitespace-pre-line">{apiError}</span>
-              </div>
-            )}
+          <form
+            onSubmit={handleSubmit}
+            noValidate
+            className="flex-1 p-6 space-y-5"
+          >
+            {/* Constant Display Message Banner */}
+            <ConstantMessageBanner
+              message={activeError || defaultConstantMessage}
+              type={activeError ? "error" : "info"}
+            />
 
             {/* Row 1: Participant Number & Participant Name */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -185,9 +216,13 @@ export default function AddParticipantDrawer({
                 <input
                   type="text"
                   value={formData.participantNumber}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, participantNumber: e.target.value }))
-                  }
+                  onChange={(e) => {
+                    setFormData((prev) => ({
+                      ...prev,
+                      participantNumber: e.target.value,
+                    }));
+                    if (errorMessage) setErrorMessage(null);
+                  }}
                   placeholder="e.g. PART-101"
                   className="form-input-standard"
                   disabled={isEditing}
@@ -201,18 +236,17 @@ export default function AddParticipantDrawer({
                 <input
                   type="text"
                   value={formData.participantName}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, participantName: e.target.value }))
-                  }
+                  onChange={(e) => {
+                    setFormData((prev) => ({
+                      ...prev,
+                      participantName: e.target.value,
+                    }));
+                    if (errorMessage) setErrorMessage(null);
+                  }}
                   placeholder="e.g. Alex West Retirement Plan"
                   className="form-input-standard"
                   required
                 />
-                {validationErrors.participantName && (
-                  <p className="text-[11px] text-rose-600 mt-1">
-                    {validationErrors.participantName}
-                  </p>
-                )}
               </div>
             </div>
 
@@ -224,9 +258,10 @@ export default function AddParticipantDrawer({
                 </label>
                 <PopoverSelect
                   value={formData.participantType}
-                  onChange={(val) =>
-                    setFormData((prev) => ({ ...prev, participantType: val }))
-                  }
+                  onChange={(val) => {
+                    setFormData((prev) => ({ ...prev, participantType: val }));
+                    if (errorMessage) setErrorMessage(null);
+                  }}
                   options={PARTICIPANT_TYPE_OPTIONS}
                   placeholder="Select Participant Type"
                 />
@@ -237,17 +272,25 @@ export default function AddParticipantDrawer({
                   <input
                     type="checkbox"
                     checked={formData.isActive}
-                    onChange={(e) =>
-                      setFormData((prev) => ({ ...prev, isActive: e.target.checked }))
-                    }
+                    onChange={(e) => {
+                      setFormData((prev) => ({
+                        ...prev,
+                        isActive: e.target.checked,
+                      }));
+                      if (errorMessage) setErrorMessage(null);
+                    }}
                     className="h-4 w-4 rounded border-slate-300 text-portal-navy focus:ring-portal-navy"
                   />
                   <span>Is Active</span>
                 </label>
                 {formData.isActive ? (
-                  <span className="badge-status-active text-[10px]">Active</span>
+                  <span className="badge-status-active text-[10px]">
+                    Active
+                  </span>
                 ) : (
-                  <span className="badge-status-inactive text-[10px]">Inactive</span>
+                  <span className="badge-status-inactive text-[10px]">
+                    Inactive
+                  </span>
                 )}
               </div>
             </div>
@@ -260,22 +303,23 @@ export default function AddParticipantDrawer({
                 </label>
                 <StandardDatePicker
                   value={formData.openDate}
-                  onChange={(val) => setFormData((prev) => ({ ...prev, openDate: val }))}
+                  onChange={(val) => {
+                    setFormData((prev) => ({ ...prev, openDate: val }));
+                    if (errorMessage) setErrorMessage(null);
+                  }}
                   placeholder="dd-mm-yyyy"
                   required
                 />
-                {validationErrors.openDate && (
-                  <p className="text-[11px] text-rose-600 mt-1">
-                    {validationErrors.openDate}
-                  </p>
-                )}
               </div>
 
               <div>
                 <label className="form-label">Close Date</label>
                 <StandardDatePicker
                   value={formData.closeDate}
-                  onChange={(val) => setFormData((prev) => ({ ...prev, closeDate: val }))}
+                  onChange={(val) => {
+                    setFormData((prev) => ({ ...prev, closeDate: val }));
+                    if (errorMessage) setErrorMessage(null);
+                  }}
                   placeholder="dd-mm-yyyy (Optional)"
                 />
               </div>
@@ -331,13 +375,18 @@ export default function AddParticipantDrawer({
                   <tbody className="divide-y divide-slate-100">
                     {filteredFunds.length === 0 ? (
                       <tr>
-                        <td colSpan={3} className="text-center py-6 text-slate-400">
+                        <td
+                          colSpan={3}
+                          className="text-center py-6 text-slate-400"
+                        >
                           No funds match filter.
                         </td>
                       </tr>
                     ) : (
                       filteredFunds.map((fund) => {
-                        const isSelected = formData.selectedFundIds.includes(fund.fundID);
+                        const isSelected = formData.selectedFundIds.includes(
+                          fund.fundID,
+                        );
                         return (
                           <tr
                             key={fund.fundID}
@@ -356,7 +405,9 @@ export default function AddParticipantDrawer({
                                 ({fund.fund})
                               </span>
                             </td>
-                            <td className="py-2 px-3 text-slate-600">{fund.fundType}</td>
+                            <td className="py-2 px-3 text-slate-600">
+                              {fund.fundType}
+                            </td>
                             <td className="py-2 px-3 text-right">
                               <button
                                 type="button"
@@ -397,7 +448,11 @@ export default function AddParticipantDrawer({
                 disabled={isSubmitting}
                 className="px-5 py-2 rounded-md bg-portal-navy hover:bg-portal-navy-hover text-white text-xs sm:text-sm font-semibold shadow-sm transition-colors disabled:opacity-50"
               >
-                {isSubmitting ? "Saving..." : isEditing ? "Save Changes" : "Submit"}
+                {isSubmitting
+                  ? "Saving..."
+                  : isEditing
+                    ? "Save Changes"
+                    : "Submit"}
               </button>
             </div>
           </form>

@@ -22,6 +22,7 @@ import {
   calculateTransactionUnits,
   formatAmountWithCommas,
 } from "../utils/transactionUtils";
+import ConstantMessageBanner from "@/components/common/ConstantMessageBanner";
 import { Info, AlertCircle } from "lucide-react";
 
 export interface AddTransactionFormProps {
@@ -172,38 +173,23 @@ export default function AddTransactionForm({
             }}
             className="space-y-3 text-slate-700 text-xs sm:text-sm"
           >
-            {/* API Error Response Banner */}
-            {apiErrorMessage && (
-              <div className="flex items-start gap-2.5 rounded-md bg-rose-50 border border-rose-200 p-3 text-xs sm:text-sm text-rose-800 shadow-2xs">
-                <AlertCircle
-                  size={18}
-                  className="shrink-0 text-rose-600 mt-0.5"
-                />
-                <div className="flex-1 font-semibold leading-relaxed whitespace-pre-wrap">
-                  {apiErrorMessage}
-                </div>
-              </div>
-            )}
-
-            {/* PDF Page 3 Info/Guidance Banner: "Please Enter The Details Below" */}
-            {showGuidanceBanner && (
-              <div className="flex items-center gap-2 rounded-md bg-blue-50 border border-blue-200 p-2 text-xs text-blue-800">
-                <Info size={16} className="shrink-0 text-blue-600" />
-                <span className="font-medium">
-                  Please Enter The Details Below
-                </span>
-              </div>
-            )}
-
-            {/* Amount Mismatch Validation Warning Banner Only */}
-            {validateAmount && (
-              <div className="flex items-center gap-2 rounded-md bg-amber-50 border border-amber-200 p-2 text-xs text-amber-800">
-                <AlertCircle size={16} className="shrink-0 text-amber-600" />
-                <span className="font-semibold">
-                  Amount and Re-enter Amount should be same
-                </span>
-              </div>
-            )}
+            {/* Constant Feedback Banner */}
+            {apiErrorMessage ? (
+              <ConstantMessageBanner
+                message={apiErrorMessage}
+                type="error"
+              />
+            ) : validateAmount ? (
+              <ConstantMessageBanner
+                message="Amount and Re-enter Amount should be same"
+                type="warning"
+              />
+            ) : showGuidanceBanner ? (
+              <ConstantMessageBanner
+                message="Please Enter The Details Below"
+                type="info"
+              />
+            ) : null}
 
             {/* 2-Column Grid Layout */}
             <div className="grid grid-cols-1 md:grid-cols-[58%_40%] gap-x-4 gap-y-3">

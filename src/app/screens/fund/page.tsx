@@ -219,19 +219,6 @@ export default function FundPage() {
 
   return (
     <div className="space-y-4">
-      {/* Page Header Card */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end ">
-        <div className="flex items-center gap-2 self-start sm:self-auto">
-          <button
-            type="button"
-            onClick={handleOpenAdd}
-            className="flex items-center gap-1.5 rounded-md bg-portal-navy px-2 py-2 text-xs sm:text-sm font-semibold text-white shadow-sm hover:bg-portal-navy-hover active:opacity-90 transition-colors"
-          >
-            <Plus size={16} /> Add Fund
-          </button>
-        </div>
-      </div>
-
       {/* Main Table Card */}
       <div className="rounded-xl border border-slate-200 bg-white shadow-xs overflow-hidden">
         {/* Table Toolbar: Search & Export Buttons */}
@@ -286,6 +273,15 @@ export default function FundPage() {
                 }`}
               />
             </button>
+            <div className="flex items-center gap-2 self-start sm:self-auto">
+              <button
+                type="button"
+                onClick={handleOpenAdd}
+                className="flex items-center gap-1.5 rounded-md bg-portal-navy px-2 py-2 text-xs sm:text-sm font-semibold text-white shadow-sm hover:bg-portal-navy-hover active:opacity-90 transition-colors"
+              >
+                <Plus size={16} /> Add Fund
+              </button>
+            </div>
           </div>
         </div>
 

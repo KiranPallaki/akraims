@@ -86,7 +86,8 @@ export const renderMenuIcon = (
     name.includes("plus") ||
     name.includes("add") ||
     name.includes("participant") ||
-    name.includes("fund")
+    name.includes("fund") ||
+    name.includes("create")
   ) {
     return <PlusCircle className={className} />;
   }
@@ -121,6 +122,24 @@ export const getMenuHref = (toURL: string): string => {
   }
   if (cleanUrl === "addparticipantfund" || cleanUrl === "add-participant-fund") {
     return "/screens/fund";
+  }
+  if (
+    cleanUrl === "createtask" ||
+    cleanUrl === "create-task" ||
+    cleanUrl === "addtask" ||
+    cleanUrl === "add-task"
+  ) {
+    return "/screens/create-task";
+  }
+  if (
+    cleanUrl === "user" ||
+    cleanUrl === "users" ||
+    cleanUrl === "userlist" ||
+    cleanUrl === "user-list" ||
+    cleanUrl === "adduser" ||
+    cleanUrl === "add-user"
+  ) {
+    return "/screens/users";
   }
   return `/screens/${cleanUrl}`;
 };
@@ -253,7 +272,8 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
               const href = getMenuHref(item.toURL);
               const isActive =
                 pathname === href ||
-                (href !== "/screens" && pathname?.startsWith(href));
+                (href === "/screens" && pathname === "/screens/dashboard") ||
+                (href !== "/screens" && pathname?.startsWith(`${href}/`));
 
               return (
                 <Link

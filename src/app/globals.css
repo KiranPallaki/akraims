@@ -8,7 +8,7 @@
   --font-sans:
     "Inter", "Geist", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
     "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-  --text-xs: clamp(0.75rem, 0.55rem + 0.8vw, 0.9375rem);
+  --text-xs: 0.75rem; /* Exactly 12px */
 }
 
 @theme inline {
@@ -114,6 +114,10 @@
   --portal-warning: #f59e0b;
   --portal-error: #ef4444;
   --portal-info: #3b82f6;
+
+  /* Table Typography Standards - Central place for global table font sizes */
+  --table-header-font-size: 12px;
+  --table-data-font-size: 12px;
 }
 
 .dark {
@@ -171,6 +175,12 @@
   html {
     @apply font-sans;
   }
+  table th {
+    font-size: var(--table-header-font-size, 12px);
+  }
+  table td {
+    font-size: var(--table-data-font-size, 12px);
+  }
   button,
   [role="button"],
   a,
@@ -195,6 +205,11 @@
   .btn-navy:hover {
     background-color: var(--portal-navy-hover, #092b57);
     color: #ffffff;
+  }
+  .btn-no-submit-bg,
+  .btn-no-submit-bg:hover {
+    background-color: transparent !important;
+    color: inherit;
   }
   input:not([type="checkbox"]):not([type="radio"]),
   select,
@@ -261,16 +276,27 @@
 }
 
 .btn-action-delete {
-  @apply p-1.5 rounded-md text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors;
+  @apply p-1.5 rounded-md text-slate-500 hover:text-portal-primary hover:bg-portal-primary/10 dark:hover:bg-rose-950/40 transition-colors;
 }
 
 /* Form Control Utilities */
 .form-label {
-  @apply block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1;
+  @apply block text-[12px] font-medium text-slate-700 dark:text-slate-300 mb-1;
 }
 
 .form-input-standard {
   @apply w-full h-8 px-3 rounded-lg border border-slate-300 bg-white text-[12px] text-slate-800 placeholder-slate-400 outline-none transition-all focus:border-[var(--portal-navy,#051a36)] focus:ring-2 focus:ring-[#051a36]/15 disabled:bg-slate-100 disabled:cursor-not-allowed dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100;
+}
+
+/* Table Typography Utility Classes */
+.table-header-text {
+  font-size: var(--table-header-font-size, 12px);
+  font-weight: 400;
+}
+
+.table-data-text {
+  font-size: var(--table-data-font-size, 12px);
+  font-weight: 200;
 }
 
 /* Print Media Styles */

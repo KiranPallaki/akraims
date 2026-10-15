@@ -3,7 +3,13 @@
 import React, { useMemo } from "react";
 import { ColumnDef } from "@tanstack/react-table";
 import { FundItem } from "../types";
-import { SquarePen, Trash2, ChevronUp, ChevronDown, ArrowUpDown } from "lucide-react";
+import {
+  SquarePen,
+  Trash2,
+  ChevronUp,
+  ChevronDown,
+  ArrowUpDown,
+} from "lucide-react";
 
 interface UseFundColumnsOptions {
   onEdit: (item: FundItem) => void;
@@ -43,7 +49,10 @@ export function useFundColumns({
               ) : isSorted === "desc" ? (
                 <ChevronDown size={13} className="text-blue-600" />
               ) : (
-                <ArrowUpDown size={11} className="text-slate-300 hover:text-slate-500" />
+                <ArrowUpDown
+                  size={11}
+                  className="text-slate-300 hover:text-slate-500"
+                />
               )}
             </button>
           );
@@ -81,7 +90,10 @@ export function useFundColumns({
               ) : isSorted === "desc" ? (
                 <ChevronDown size={13} className="text-blue-600" />
               ) : (
-                <ArrowUpDown size={11} className="text-slate-300 hover:text-slate-500" />
+                <ArrowUpDown
+                  size={11}
+                  className="text-slate-300 hover:text-slate-500"
+                />
               )}
             </button>
           );
@@ -119,13 +131,16 @@ export function useFundColumns({
               ) : isSorted === "desc" ? (
                 <ChevronDown size={13} className="text-blue-600" />
               ) : (
-                <ArrowUpDown size={11} className="text-slate-300 hover:text-slate-500" />
+                <ArrowUpDown
+                  size={11}
+                  className="text-slate-300 hover:text-slate-500"
+                />
               )}
             </button>
           );
         },
         cell: ({ row }) => (
-          <span className="font-medium text-slate-800 block truncate max-w-md">
+          <span className=" text-slate-800 block truncate max-w-md">
             {row.original.fundName || "-"}
           </span>
         ),
@@ -133,9 +148,13 @@ export function useFundColumns({
       {
         id: "actions",
         enableSorting: false,
-        header: () => <div className="text-right pr-2">Actions</div>,
+        header: () => (
+          <div className="inline-flex items-center gap-1.5 font-semibold text-xs sm:text-[12px] tracking-wider transition-colors cursor-pointer select-none py-0.5">
+            Actions
+          </div>
+        ),
         cell: ({ row }) => (
-          <div className="flex items-center justify-end gap-1.5 pr-1">
+          <div className="flex items-right justify-start gap-1.5 pr-1">
             <button
               type="button"
               onClick={(e) => {

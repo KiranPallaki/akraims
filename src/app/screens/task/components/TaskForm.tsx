@@ -11,6 +11,7 @@ import {
 import PopoverSelect, {
   PopoverSelectOption,
 } from "@/components/common/PopoverSelect";
+import ConstantMessageBanner from "@/components/common/ConstantMessageBanner";
 import {
   Calendar as CalendarIcon,
   X,
@@ -252,57 +253,43 @@ export default function TaskForm({
 
   return (
     <div className="w-full max-w-xl space-y-3">
-      {/* Top Constant Feedback Banner (matching Allocations screen) */}
-      <div
-        className={`shrink-0 flex items-center gap-2.5 rounded-lg p-2.5 text-xs sm:text-[12px] border transition-colors ${
-          activeFeedback.type === "success"
-            ? "bg-emerald-50 text-emerald-800 border-emerald-200"
-            : activeFeedback.type === "error"
-              ? "bg-amber-50 text-amber-800 border-amber-200"
-              : "bg-blue-50 text-blue-900 border-blue-200"
-        }`}
-      >
-        {activeFeedback.type === "success" ? (
-          <CheckCircle2 size={18} className="shrink-0 text-emerald-600" />
-        ) : activeFeedback.type === "error" ? (
-          <AlertCircle size={18} className="shrink-0 text-amber-600" />
-        ) : (
-          <Info size={18} className="shrink-0 text-blue-600" />
-        )}
-        <span>{activeFeedback.message}</span>
-      </div>
+      {/* Top Constant Feedback Banner */}
+      <ConstantMessageBanner
+        type={activeFeedback.type}
+        message={activeFeedback.message}
+      />
 
       {/* Main Task Form Card */}
       <div className="w-full bg-white border border-slate-200 rounded-2xl p-4 shadow-xs">
         <form onSubmit={handleSubmit} className="space-y-3">
           {/* Top Radio Selector: Select: (o) Data Views ( ) Data Process */}
           <div className="grid grid-cols-[120px_12px_1fr] sm:grid-cols-[130px_12px_1fr] items-center gap-1 sm:gap-2 border-b border-slate-100 pb-4">
-            <span className="text-sm font-semibold text-slate-800 truncate">
+            <span className="text-xs font-semibold text-slate-800 truncate">
               Select
             </span>
-            <span className="text-sm font-semibold text-slate-800 text-center">
+            <span className="text-xs font-semibold text-slate-800 text-center">
               :
             </span>
             <div className="flex items-center space-x-6">
-              <label className="inline-flex items-center gap-2 cursor-pointer text-sm  text-slate-800">
+              <label className="inline-flex items-center gap-2 cursor-pointer text-xs text-slate-800">
                 <input
                   type="radio"
                   name="taskReturnType"
                   value="dataset"
                   checked={returnType === "dataset"}
                   onChange={() => handleRadioChange("dataset")}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-300"
+                  className="h-4 w-4 accent-[#051a36] text-portal-navy focus:ring-portal-navy border-slate-300"
                 />
                 Data Views
               </label>
-              <label className="inline-flex items-center gap-2 cursor-pointer text-sm text-slate-800">
+              <label className="inline-flex items-center gap-2 cursor-pointer text-xs text-slate-800">
                 <input
                   type="radio"
                   name="taskReturnType"
                   value="dataprocess"
                   checked={returnType === "dataprocess"}
                   onChange={() => handleRadioChange("dataprocess")}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-300"
+                  className="h-4 w-4 accent-[#051a36] text-portal-navy focus:ring-portal-navy border-slate-300"
                 />
                 Data Process
               </label>
@@ -311,10 +298,10 @@ export default function TaskForm({
 
           {/* Task Selection Dropdown: Task: [ Select... v ] */}
           <div className="grid grid-cols-[120px_12px_1fr] sm:grid-cols-[130px_12px_1fr] items-center gap-1 sm:gap-2">
-            <span className="text-sm font-semibold text-slate-800 truncate">
+            <span className="text-xs font-semibold text-slate-800 truncate">
               Task
             </span>
-            <span className="text-sm font-semibold text-slate-800 text-center">
+            <span className="text-xs font-semibold text-slate-800 text-center">
               :
             </span>
             <div className="flex-1 min-w-0 max-w-sm">
@@ -332,7 +319,7 @@ export default function TaskForm({
                     onSelectTask(match || null);
                   }}
                   disabled={isLoadingMetadata}
-                  className="h-8 w-full border-slate-300 rounded-lg text-sm bg-white shadow-2xs pr-8"
+                  className="h-8 w-full border-slate-300 rounded-lg text-xs bg-white shadow-2xs pr-8"
                 />
                 {selectedTask && (
                   <button
@@ -353,7 +340,7 @@ export default function TaskForm({
             <div className="space-y-3 pt-2  border-slate-100 animate-in fade-in-50 duration-200">
               {isLoadingParameters ? (
                 <div className="py-6 text-center text-xs text-slate-500 flex items-center justify-center gap-2">
-                  <RefreshCw size={16} className="animate-spin text-blue-600" />
+                  <RefreshCw size={16} className="animate-spin text-portal-navy" />
                   Loading task parameters...
                 </div>
               ) : inParameters.length === 0 ? (
@@ -377,10 +364,10 @@ export default function TaskForm({
                       key={param.parameterID}
                       className="grid grid-cols-[120px_12px_1fr] sm:grid-cols-[130px_12px_1fr] items-center gap-1 sm:gap-2"
                     >
-                      <span className="text-sm font-semibold text-slate-800 truncate">
+                      <span className="text-xs font-semibold text-slate-800 truncate">
                         {param.parameterName}
                       </span>
-                      <span className="text-sm font-semibold text-slate-800 text-center">
+                      <span className="text-xs font-semibold text-slate-800 text-center">
                         :
                       </span>
                       <div className="flex-1 min-w-0 max-w-sm">
@@ -398,7 +385,7 @@ export default function TaskForm({
                               handleFieldChange(param.parameterName, val)
                             }
                             disabled={isLoadingFunds}
-                            className="h-8 w-full border-slate-300 rounded-lg text-sm bg-white shadow-2xs"
+                            className="h-8 w-full border-slate-300 rounded-lg text-xs bg-white shadow-2xs"
                           />
                         ) : /* 2. ParticipantID Special Lookup Field */
                         isParticipant ? (
@@ -414,7 +401,7 @@ export default function TaskForm({
                               handleFieldChange(param.parameterName, val)
                             }
                             disabled={isLoadingParticipants}
-                            className="h-8 w-full border-slate-300 rounded-lg text-sm bg-white shadow-2xs"
+                            className="h-8 w-full border-slate-300 rounded-lg text-xs bg-white shadow-2xs"
                           />
                         ) : /* 3. Date / SmallDateTime Field with Calendar Picker */
                         isDate ? (
@@ -438,7 +425,7 @@ export default function TaskForm({
                                   )
                                 }
                                 placeholder="MM/DD/YYYY"
-                                className="w-full h-8 rounded-lg border border-slate-300 bg-white pl-3 pr-9 text-[12px] text-slate-800 shadow-2xs focus:border-blue-600 focus:outline-none"
+                                className="w-full h-8 rounded-lg border border-slate-300 bg-white pl-3 pr-9 text-xs text-slate-800 shadow-2xs focus:border-portal-navy focus:ring-2 focus:ring-portal-navy/15 focus:outline-none"
                               />
                               <PopoverTrigger asChild>
                                 <button
@@ -489,7 +476,7 @@ export default function TaskForm({
                                 e.target.value,
                               )
                             }
-                            className="w-full h-8 rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-800 shadow-2xs focus:border-blue-600 focus:outline-none"
+                            className="w-full h-8 rounded-lg border border-slate-300 bg-white px-3 text-xs text-slate-800 shadow-2xs focus:border-portal-navy focus:ring-2 focus:ring-portal-navy/15 focus:outline-none"
                           >
                             <option value="">Select...</option>
                             {param.options?.map((opt) => (
@@ -513,7 +500,7 @@ export default function TaskForm({
                               )
                             }
                             placeholder={param.parameterName}
-                            className="w-full h-8 rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-800 shadow-2xs focus:border-blue-600 focus:outline-none"
+                            className="w-full h-8 rounded-lg border border-slate-300 bg-white px-3 text-xs text-slate-800 shadow-2xs focus:border-portal-navy focus:ring-2 focus:ring-portal-navy/15 focus:outline-none"
                           />
                         )}
                       </div>
@@ -525,17 +512,17 @@ export default function TaskForm({
               {/* Download Option Field (For Data Views / dataset) */}
               {returnType === "dataset" && (
                 <div className="grid grid-cols-[120px_12px_1fr] sm:grid-cols-[130px_12px_1fr] items-center gap-1 sm:gap-2">
-                  <span className="text-sm font-semibold text-slate-800 truncate">
+                  <span className="text-xs font-semibold text-slate-800 truncate">
                     Download
                   </span>
-                  <span className="text-sm font-semibold text-slate-800 text-center">
+                  <span className="text-xs font-semibold text-slate-800 text-center">
                     :
                   </span>
                   <div className="flex-1 min-w-0 max-w-sm">
                     <select
                       value={downloadOption}
                       onChange={(e) => setDownloadOption(e.target.value)}
-                      className="w-full h-8 rounded-lg border border-slate-300 bg-white px-3 text-[12px] text-slate-800 shadow-2xs focus:border-blue-600 focus:outline-none"
+                      className="w-full h-8 rounded-lg border border-slate-300 bg-white px-3 text-xs text-slate-800 shadow-2xs focus:border-portal-navy focus:ring-2 focus:ring-portal-navy/15 focus:outline-none"
                     >
                       {selectedTask.allowExcelExport !== false && (
                         <option value="excel">Excel</option>
@@ -554,18 +541,18 @@ export default function TaskForm({
           )}
 
           {/* Form Action Buttons: [ Cancel ] [ Submit ] */}
-          <div className="flex items-center gap-4 justify-end   border-slate-100">
+          <div className="flex items-center gap-3 justify-end pt-2 border-slate-100">
             <button
               type="button"
               onClick={onCancel}
-              className="text-sm font-bold text-slate-800 hover:underline transition-colors px-2 py-1"
+              className="rounded-md border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-semibold px-4 py-1.5 text-xs shadow-2xs transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={!selectedTask || isSubmitting}
-              className="rounded-xl bg-portal-navy px-6 py-2 text-sm font-bold text-white shadow-sm hover:bg-portal-navy-hover active:opacity-90 transition-colors disabled:opacity-50 flex items-center gap-2"
+              className="rounded-md bg-portal-navy px-5 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-portal-navy-hover active:opacity-90 transition-colors disabled:opacity-50 flex items-center gap-1.5"
             >
               {isSubmitting ? (
                 <>

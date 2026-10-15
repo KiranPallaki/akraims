@@ -274,8 +274,6 @@ export default function TableData({
         data={tableRows}
         isLoading={isLoading}
         emptyMessage="No execution results to display. Run a task to populate data."
-        enablePagination={true}
-        initialPageSize={10}
       />
     </div>
   );

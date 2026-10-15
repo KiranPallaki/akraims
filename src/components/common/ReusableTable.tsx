@@ -74,7 +74,7 @@ export default function ReusableTable<TData>({
   fontSize,
   headerFontSize,
   containerClassName,
-  maxHeight = "max-h-[60vh] lg:max-h-[calc(100vh-270px)]",
+  maxHeight,
   tableClassName,
   headerClassName,
   headerCellClassName,
@@ -82,7 +82,7 @@ export default function ReusableTable<TData>({
   cellClassName,
   className,
   onRowClick,
-  enablePagination = true,
+  enablePagination,
   initialPageSize = 10,
   selectedIndex,
 }: ReusableTableProps<TData>) {
@@ -102,7 +102,14 @@ export default function ReusableTable<TData>({
     fontSize: fontSize || GLOBAL_TABLE_CONFIG.fontSize,
     headerFontSize: headerFontSize || GLOBAL_TABLE_CONFIG.headerFontSize,
     emptyMessage: emptyMessage || GLOBAL_TABLE_CONFIG.emptyMessage,
+    enablePagination:
+      enablePagination !== undefined
+        ? enablePagination
+        : GLOBAL_TABLE_CONFIG.enablePagination,
+    maxHeight: maxHeight || GLOBAL_TABLE_CONFIG.maxHeight,
   });
+
+  const isPaginationActive = resolvedConfig.enablePagination;
 
   const table = useReactTable({
     data,
@@ -110,7 +117,7 @@ export default function ReusableTable<TData>({
     state: {
       sorting,
       columnFilters,
-      pagination: enablePagination ? pagination : undefined,
+      pagination: isPaginationActive ? pagination : undefined,
     },
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -118,7 +125,7 @@ export default function ReusableTable<TData>({
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: enablePagination
+    getPaginationRowModel: isPaginationActive
       ? getPaginationRowModel()
       : undefined,
   });
@@ -129,7 +136,7 @@ export default function ReusableTable<TData>({
         className={cn(
           resolvedConfig.containerClass,
           "relative overflow-y-auto overflow-x-auto",
-          maxHeight,
+          resolvedConfig.maxHeight,
           containerClassName,
         )}
       >
@@ -215,6 +222,7 @@ export default function ReusableTable<TData>({
                         key={cell.id}
                         className={cn(
                           resolvedConfig.rowPadding,
+                          resolvedConfig.fontSize,
                           "align-middle text-slate-700",
                           cellClassName,
                         )}
@@ -233,7 +241,7 @@ export default function ReusableTable<TData>({
         </table>
       </div>
 
-      {enablePagination && table.getRowModel().rows.length > 0 && (
+      {isPaginationActive && table.getRowModel().rows.length > 0 && (
         <Pagination
           pageIndex={table.getState().pagination.pageIndex}
           pageSize={table.getState().pagination.pageSize}

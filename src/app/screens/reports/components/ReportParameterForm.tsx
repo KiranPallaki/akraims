@@ -15,6 +15,7 @@ import StandardDatePicker from "@/components/common/StandardDatePicker";
 import PopoverSelect, {
   PopoverSelectOption,
 } from "@/components/common/PopoverSelect";
+import ConstantMessageBanner from "@/components/common/ConstantMessageBanner";
 import {
   Download,
   Eye,
@@ -23,6 +24,8 @@ import {
   AlertCircle,
   Loader2,
   SlidersHorizontal,
+  CheckCircle2,
+  Info,
 } from "lucide-react";
 
 interface ReportParameterFormProps {
@@ -54,8 +57,12 @@ export default function ReportParameterForm({
   });
 
   const [outputFormat, setOutputFormat] = useState<"pdf" | "xlsx">("pdf");
-  const [showValidate, setShowValidate] = useState(false);
-  const [validationMessage, setValidationMessage] = useState("");
+  const [statusType, setStatusType] = useState<
+    "info" | "error" | "success" | "loading"
+  >("info");
+  const [statusMessage, setStatusMessage] = useState<string>(
+    ` Please configure the parameters .`,
+  );
   const [isViewLoading, setIsViewLoading] = useState(false);
   const [isDownloadLoading, setIsDownloadLoading] = useState(false);
   const [, startTransition] = useTransition();
@@ -153,8 +160,10 @@ export default function ReportParameterForm({
       });
 
       setFormData(newFormState);
-      setShowValidate(false);
-      setValidationMessage("");
+      setStatusType("info");
+      setStatusMessage(
+        `Please configure the parameters below and click Preview or Download.`,
+      );
       setIsLoadingDropdowns(false);
     }
 
@@ -170,9 +179,12 @@ export default function ReportParameterForm({
       ...prev,
       [field]: value,
     }));
-    if (showValidate && field === "ParticipantID" && value !== "0") {
-      setShowValidate(false);
-      setValidationMessage("");
+    // If fixing an error or after previous success/action, revert constant message to informative prompt
+    if (statusType === "error" || statusType === "success") {
+      setStatusType("info");
+      setStatusMessage(
+        `Ready to generate "${report.reportName}". Click Preview or Download.`,
+      );
     }
   };
 
@@ -190,22 +202,20 @@ export default function ReportParameterForm({
     );
 
     if (hasParticipantParam && formData.ParticipantID === "0") {
-      setShowValidate(true);
-      setValidationMessage("Please Select ParticipantID");
+      setStatusType("error");
+      setStatusMessage("Please Select ParticipantID");
       return false;
     }
 
     // Date range validation
     if (formData.BeginDate && formData.EndDate) {
       if (new Date(formData.BeginDate) > new Date(formData.EndDate)) {
-        setShowValidate(true);
-        setValidationMessage("Begin Date cannot be later than End Date");
+        setStatusType("error");
+        setStatusMessage("Begin Date cannot be later than End Date");
         return false;
       }
     }
 
-    setShowValidate(false);
-    setValidationMessage("");
     return true;
   };
 
@@ -259,19 +269,25 @@ export default function ReportParameterForm({
     if (!validateForm()) return;
 
     setIsViewLoading(true);
+    setStatusType("loading");
+    setStatusMessage(`Generating report preview for "${report.reportName}"...`);
     try {
       const payload = buildReportPayload(outputFormat);
       const res = await generateReport(payload);
 
       if (res.ok && res.blob) {
         onPreviewReport(res.blob, outputFormat, report.reportName);
+        setStatusType("success");
+        setStatusMessage(
+          `Report preview generated successfully for "${report.reportName}"! Displaying preview.`,
+        );
       } else {
-        setShowValidate(true);
-        setValidationMessage(res.error || "Failed to generate report preview.");
+        setStatusType("error");
+        setStatusMessage(res.error || "Failed to generate report preview.");
       }
     } catch (err) {
-      setShowValidate(true);
-      setValidationMessage(
+      setStatusType("error");
+      setStatusMessage(
         err instanceof Error ? err.message : "Error generating report preview",
       );
     } finally {
@@ -285,6 +301,10 @@ export default function ReportParameterForm({
     if (!validateForm()) return;
 
     setIsDownloadLoading(true);
+    setStatusType("loading");
+    setStatusMessage(
+      `Preparing and downloading "${report.reportName}" in ${outputFormat.toUpperCase()} format...`,
+    );
     try {
       const payload = buildReportPayload(outputFormat);
       const res = await generateReport(payload);
@@ -300,13 +320,18 @@ export default function ReportParameterForm({
         a.click();
         a.remove();
         window.URL.revokeObjectURL(url);
+
+        setStatusType("success");
+        setStatusMessage(
+          `Report "${report.reportName}" downloaded successfully in ${outputFormat.toUpperCase()} format.`,
+        );
       } else {
-        setShowValidate(true);
-        setValidationMessage(res.error || "Failed to download report.");
+        setStatusType("error");
+        setStatusMessage(res.error || "Failed to download report.");
       }
     } catch (err) {
-      setShowValidate(true);
-      setValidationMessage(
+      setStatusType("error");
+      setStatusMessage(
         err instanceof Error ? err.message : "Error downloading report",
       );
     } finally {
@@ -329,20 +354,18 @@ export default function ReportParameterForm({
       {/* Dynamic Parameters Controls Form */}
       <form
         onSubmit={handleSubmit}
-        className="p-5 space-y-4 flex-1 flex flex-col justify-between"
+        className="p-4 space-y-3 flex-1 flex flex-col justify-between"
       >
-        <div className="space-y-4">
-          {/* Validation Alert Box */}
-          {showValidate && validationMessage && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2.5 text-[12px] text-red-700 font-medium animate-in fade-in">
-              <AlertCircle className="h-4 w-4 shrink-0 text-red-600 mt-0.5" />
-              <span>{validationMessage}</span>
-            </div>
-          )}
+        <div className="space-y-3">
+          {/* Constant Display Message Box (Always visible: displays initial message, updates on error or success) */}
+          <ConstantMessageBanner
+            type={statusType}
+            message={statusMessage}
+          />
 
           {isLoadingDropdowns ? (
             <div className="py-8 text-center text-slate-500 text-[12px] font-medium flex items-center justify-center gap-2">
-              <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+              <Loader2 className="h-4 w-4 animate-spin text-portal-navy" />
               <span>Loading report options...</span>
             </div>
           ) : (
@@ -410,7 +433,8 @@ export default function ReportParameterForm({
                         options={participantOptions}
                         placeholder="-- Select Participant --"
                         className={
-                          showValidate && formData.ParticipantID === "0"
+                          statusType === "error" &&
+                          formData.ParticipantID === "0"
                             ? "border-red-500 ring-1 ring-red-500"
                             : ""
                         }
@@ -609,7 +633,7 @@ export default function ReportParameterForm({
               </label>
               <span className="text-[12px] font-medium text-slate-700">:</span>
             </div>
-            <div className="flex-1 grid grid-cols-2 gap-2">
+            <div className="flex-1 grid grid-cols-6 gap-2">
               <button
                 type="button"
                 onClick={() => setOutputFormat("pdf")}
@@ -617,9 +641,13 @@ export default function ReportParameterForm({
                   outputFormat === "pdf" ? "text-[#051a36]" : "text-slate-600"
                 }`}
               >
-                <FileText className="h-4 w-4 text-red-600" />
+                <div className="relative flex items-center justify-center">
+                  <FileText className="h-5 w-5 text-red-500" />
+                  <span className="absolute text-[7px] font-black text-red-500 -right-1 -bottom-0.5 bg-white  ">
+                    PDF
+                  </span>
+                </div>
               </button>
-
               <button
                 type="button"
                 onClick={() => setOutputFormat("xlsx")}
@@ -627,7 +655,43 @@ export default function ReportParameterForm({
                   outputFormat === "xlsx" ? "text-[#051a36]" : "text-slate-600"
                 }`}
               >
-                <FileSpreadsheet className="h-4 w-4 text-emerald-600" />
+                <div className="relative flex items-center justify-center">
+                  <FileSpreadsheet className="h-5 w-5 text-emerald-600" />
+                  <span className="absolute text-[8px] font-black text-emerald-600 right-0 bottom-0 bg-white">
+                    X
+                  </span>
+                </div>
+              </button>
+              <button
+                type="button"
+                onClick={handlePreviewClick}
+                disabled={
+                  isViewLoading || isDownloadLoading || isLoadingDropdowns
+                }
+                className=" flex items-center justify-center gap-2  text-[12px] font-medium transition-all "
+              >
+                {isViewLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+                ) : (
+                  <Eye className="h-4 w-4 text-blue-600" />
+                )}
+                {/* <span>Preview (View)</span> */}
+              </button>
+
+              <button
+                type="submit"
+                disabled={
+                  isViewLoading || isDownloadLoading || isLoadingDropdowns
+                }
+                title="Download report"
+                aria-label="Download report"
+                className="output-download-button flex  w-full min-w-0 items-center justify-center bg-white text-[#051a36]  disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isDownloadLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin text-[#051a36]" />
+                ) : (
+                  <Download className="h-4 w-4 text-[#051a36]" />
+                )}
               </button>
             </div>
           </div>
@@ -655,9 +719,9 @@ export default function ReportParameterForm({
             className="w-full sm:w-1/2 flex items-center justify-center gap-2 h-10 px-4 rounded-lg bg-[#051a36] text-white hover:bg-[#092b57] shadow-sm text-[12px] font-medium transition-all disabled:opacity-50"
           >
             {isDownloadLoading ? (
-              <Loader2 className="h-4 w-4 animate-spin text-white" />
+              <Loader2 className="h-4 w-4 animate-spin text-navy-primary" />
             ) : (
-              <Download className="h-4 w-4 text-white" />
+              <Download className="h-4 w-4 text-navy-primary" />
             )}
             <span>Download Report</span>
           </button>

@@ -3,7 +3,13 @@
 import React, { useMemo } from "react";
 import { ColumnDef } from "@tanstack/react-table";
 import { ParticipantItem } from "../types";
-import { SquarePen, Trash2, ChevronUp, ChevronDown, ArrowUpDown } from "lucide-react";
+import {
+  SquarePen,
+  Trash2,
+  ChevronUp,
+  ChevronDown,
+  ArrowUpDown,
+} from "lucide-react";
 import { formatDate } from "@/lib/dateUtils";
 
 interface UseParticipantColumnsOptions {
@@ -44,7 +50,10 @@ export function useParticipantColumns({
               ) : isSorted === "desc" ? (
                 <ChevronDown size={13} className="text-blue-600" />
               ) : (
-                <ArrowUpDown size={11} className="text-slate-300 hover:text-slate-500" />
+                <ArrowUpDown
+                  size={11}
+                  className="text-slate-300 hover:text-slate-500"
+                />
               )}
             </button>
           );
@@ -82,7 +91,10 @@ export function useParticipantColumns({
               ) : isSorted === "desc" ? (
                 <ChevronDown size={13} className="text-blue-600" />
               ) : (
-                <ArrowUpDown size={11} className="text-slate-300 hover:text-slate-500" />
+                <ArrowUpDown
+                  size={11}
+                  className="text-slate-300 hover:text-slate-500"
+                />
               )}
             </button>
           );
@@ -120,7 +132,10 @@ export function useParticipantColumns({
               ) : isSorted === "desc" ? (
                 <ChevronDown size={13} className="text-blue-600" />
               ) : (
-                <ArrowUpDown size={11} className="text-slate-300 hover:text-slate-500" />
+                <ArrowUpDown
+                  size={11}
+                  className="text-slate-300 hover:text-slate-500"
+                />
               )}
             </button>
           );
@@ -128,20 +143,7 @@ export function useParticipantColumns({
         cell: ({ row }) => {
           const status = row.original.status || "Active";
           const isActive = status.toLowerCase() === "active";
-          return (
-            <span
-              className={
-                isActive ? "badge-status-active" : "badge-status-inactive"
-              }
-            >
-              <span
-                className={`h-1.5 w-1.5 rounded-full ${
-                  isActive ? "bg-emerald-500" : "bg-slate-400"
-                }`}
-              />
-              {status}
-            </span>
-          );
+          return <span>{status}</span>;
         },
       },
       {
@@ -176,7 +178,10 @@ export function useParticipantColumns({
               ) : isSorted === "desc" ? (
                 <ChevronDown size={13} className="text-blue-600" />
               ) : (
-                <ArrowUpDown size={11} className="text-slate-300 hover:text-slate-500" />
+                <ArrowUpDown
+                  size={11}
+                  className="text-slate-300 hover:text-slate-500"
+                />
               )}
             </button>
           );
@@ -227,7 +232,10 @@ export function useParticipantColumns({
               ) : isSorted === "desc" ? (
                 <ChevronDown size={13} className="text-blue-600" />
               ) : (
-                <ArrowUpDown size={11} className="text-slate-300 hover:text-slate-500" />
+                <ArrowUpDown
+                  size={11}
+                  className="text-slate-300 hover:text-slate-500"
+                />
               )}
             </button>
           );
@@ -244,9 +252,13 @@ export function useParticipantColumns({
       {
         id: "actions",
         enableSorting: false,
-        header: () => <div className="text-right pr-2">Actions</div>,
+        header: () => (
+          <div className="inline-flex items-center gap-1.5 font-semibold text-xs sm:text-[12px] tracking-wider transition-colors cursor-pointer select-none py-0.5">
+            Actions
+          </div>
+        ),
         cell: ({ row }) => (
-          <div className="flex items-center justify-end gap-1.5 pr-1">
+          <div className="flex items-center justify-start gap-1.5 ">
             <button
               type="button"
               onClick={(e) => {

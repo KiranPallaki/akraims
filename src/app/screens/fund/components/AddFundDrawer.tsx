@@ -4,7 +4,8 @@ import React, { useState, useEffect } from "react";
 import { FundItem, FundFormValues } from "../types";
 import PopoverSelect from "@/components/common/PopoverSelect";
 import StandardDatePicker from "@/components/common/StandardDatePicker";
-import { X, AlertCircle } from "lucide-react";
+import ConstantMessageBanner from "@/components/common/ConstantMessageBanner";
+import { X } from "lucide-react";
 
 interface AddFundDrawerProps {
   isOpen: boolean;
@@ -54,6 +55,9 @@ export default function AddFundDrawer({
   apiError,
 }: AddFundDrawerProps) {
   const isEditing = Boolean(initialData);
+  const defaultConstantMessage = isEditing
+    ? `Update configuration for fund ${initialData?.fund || ""}`.trim()
+    : "Please enter the fund details below";
 
   const [formData, setFormData] = useState<FundFormValues>({
     fund: "",
@@ -68,7 +72,7 @@ export default function AddFundDrawer({
     fundRefCode: "",
   });
 
-  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (initialData) {
@@ -78,7 +82,10 @@ export default function AddFundDrawer({
         amount: initialData.amount ? String(initialData.amount) : "",
         accountType: initialData.accountType || "Endowment",
         priceSchedule: initialData.priceSchedule || "Monthly",
-        openDate: initialData.openDate || initialData.fundOpenDate || new Date().toISOString().slice(0, 10),
+        openDate:
+          initialData.openDate ||
+          initialData.fundOpenDate ||
+          new Date().toISOString().slice(0, 10),
         fundType: initialData.fundType || "Pool",
         baseCurrency: initialData.baseCurrency || "USD",
         clientFundCode: initialData.clientFundCode || "",
@@ -98,19 +105,35 @@ export default function AddFundDrawer({
         fundRefCode: "",
       });
     }
-    setValidationErrors({});
+    setErrorMessage(null);
   }, [initialData, isOpen]);
+
+  useEffect(() => {
+    if (!isSubmitting && apiError) {
+      setErrorMessage(apiError);
+    } else if (!apiError) {
+      setErrorMessage(null);
+    }
+  }, [apiError, isSubmitting]);
 
   if (!isOpen) return null;
 
   const validate = (): boolean => {
-    const errors: Record<string, string> = {};
-    if (!formData.fund.trim()) errors.fund = "Fund code is required";
-    if (!formData.fundName.trim()) errors.fundName = "Fund name is required";
-    if (!formData.openDate) errors.openDate = "Open date is required";
+    if (!formData.fund.trim()) {
+      setErrorMessage("Fund code is required");
+      return false;
+    }
+    if (!formData.fundName.trim()) {
+      setErrorMessage("Fund name is required");
+      return false;
+    }
+    if (!formData.openDate) {
+      setErrorMessage("Open date is required");
+      return false;
+    }
 
-    setValidationErrors(errors);
-    return Object.keys(errors).length === 0;
+    setErrorMessage(null);
+    return true;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -118,6 +141,8 @@ export default function AddFundDrawer({
     if (!validate()) return;
     await onSubmit(formData);
   };
+
+  const activeError = errorMessage;
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden">
@@ -130,7 +155,7 @@ export default function AddFundDrawer({
       <div className="fixed inset-y-0 right-0 max-w-full flex">
         <div className="w-screen max-w-lg bg-white shadow-2xl border-l border-slate-200 flex flex-col overflow-y-auto">
           {/* Drawer Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-slate-50/70">
+          <div className="flex items-center justify-between px-4 py-2 border-b border-slate-200 bg-slate-50/70">
             <div>
               <h2 className="text-base font-bold text-slate-900 tracking-tight">
                 {isEditing ? "Edit Fund" : "Add Fund"}
@@ -152,42 +177,48 @@ export default function AddFundDrawer({
           </div>
 
           {/* Form Content */}
-          <form onSubmit={handleSubmit} className="flex-1 p-6 space-y-4">
-            {apiError && (
-              <div className="rounded-lg bg-rose-50 border border-rose-200 p-3 text-xs text-rose-700 flex items-start gap-2">
-                <AlertCircle className="h-4 w-4 text-rose-500 shrink-0 mt-0.5" />
-                <span className="whitespace-pre-line">{apiError}</span>
-              </div>
-            )}
+          <form
+            onSubmit={handleSubmit}
+            noValidate
+            className="flex-1 p-6 space-y-4"
+          >
+            {/* Constant Display Message Banner */}
+            <ConstantMessageBanner
+              message={activeError || defaultConstantMessage}
+              type={activeError ? "error" : "info"}
+            />
 
             {/* Fund Code & Fund Name */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="form-label">
-                  Fund Code <span className="text-rose-500">*</span>
+                  Fund Code <span className="text-portal-primary">*</span>
                 </label>
                 <input
                   type="text"
                   value={formData.fund}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, fund: e.target.value.toUpperCase() }))
-                  }
+                  onChange={(e) => {
+                    setFormData((prev) => ({
+                      ...prev,
+                      fund: e.target.value.toUpperCase(),
+                    }));
+                    if (errorMessage) setErrorMessage(null);
+                  }}
                   placeholder="e.g. HNF01"
                   className="form-input-standard"
                   required
                 />
-                {validationErrors.fund && (
-                  <p className="text-[11px] text-rose-600 mt-1">{validationErrors.fund}</p>
-                )}
               </div>
 
               <div>
                 <label className="form-label">
-                  Fund Type <span className="text-rose-500">*</span>
+                  Fund Type <span className="text-portal-primary">*</span>
                 </label>
                 <PopoverSelect
                   value={formData.fundType}
-                  onChange={(val) => setFormData((prev) => ({ ...prev, fundType: val }))}
+                  onChange={(val) =>
+                    setFormData((prev) => ({ ...prev, fundType: val }))
+                  }
                   options={FUND_TYPE_OPTIONS}
                   placeholder="Select Fund Type"
                 />
@@ -196,21 +227,22 @@ export default function AddFundDrawer({
 
             <div>
               <label className="form-label">
-                Fund Name <span className="text-rose-500">*</span>
+                Fund Name <span className="text-portal-primary">*</span>
               </label>
               <input
                 type="text"
                 value={formData.fundName}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, fundName: e.target.value }))
-                }
+                onChange={(e) => {
+                  setFormData((prev) => ({
+                    ...prev,
+                    fundName: e.target.value,
+                  }));
+                  if (errorMessage) setErrorMessage(null);
+                }}
                 placeholder="e.g. HNF Institutions Fund"
                 className="form-input-standard"
                 required
               />
-              {validationErrors.fundName && (
-                <p className="text-[11px] text-rose-600 mt-1">{validationErrors.fundName}</p>
-              )}
             </div>
 
             {/* Amount & Currency */}
@@ -233,7 +265,9 @@ export default function AddFundDrawer({
                 <label className="form-label">Base Currency</label>
                 <PopoverSelect
                   value={formData.baseCurrency}
-                  onChange={(val) => setFormData((prev) => ({ ...prev, baseCurrency: val }))}
+                  onChange={(val) =>
+                    setFormData((prev) => ({ ...prev, baseCurrency: val }))
+                  }
                   options={CURRENCY_OPTIONS}
                   placeholder="Select Currency"
                 />
@@ -246,7 +280,9 @@ export default function AddFundDrawer({
                 <label className="form-label">Account Type</label>
                 <PopoverSelect
                   value={formData.accountType}
-                  onChange={(val) => setFormData((prev) => ({ ...prev, accountType: val }))}
+                  onChange={(val) =>
+                    setFormData((prev) => ({ ...prev, accountType: val }))
+                  }
                   options={ACCOUNT_TYPE_OPTIONS}
                   placeholder="Select Account Type"
                 />
@@ -256,7 +292,9 @@ export default function AddFundDrawer({
                 <label className="form-label">Price Schedule</label>
                 <PopoverSelect
                   value={formData.priceSchedule}
-                  onChange={(val) => setFormData((prev) => ({ ...prev, priceSchedule: val }))}
+                  onChange={(val) =>
+                    setFormData((prev) => ({ ...prev, priceSchedule: val }))
+                  }
                   options={PRICE_SCHEDULE_OPTIONS}
                   placeholder="Select Price Schedule"
                 />
@@ -266,17 +304,17 @@ export default function AddFundDrawer({
             {/* Open Date */}
             <div>
               <label className="form-label">
-                Open Date <span className="text-rose-500">*</span>
+                Open Date <span className="text-portal-primary">*</span>
               </label>
               <StandardDatePicker
                 value={formData.openDate}
-                onChange={(val) => setFormData((prev) => ({ ...prev, openDate: val }))}
+                onChange={(val) => {
+                  setFormData((prev) => ({ ...prev, openDate: val }));
+                  if (errorMessage) setErrorMessage(null);
+                }}
                 placeholder="dd-mm-yyyy"
                 required
               />
-              {validationErrors.openDate && (
-                <p className="text-[11px] text-rose-600 mt-1">{validationErrors.openDate}</p>
-              )}
             </div>
 
             {/* Client Fund Code & Ref Code */}
@@ -287,7 +325,10 @@ export default function AddFundDrawer({
                   type="text"
                   value={formData.clientFundCode || ""}
                   onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, clientFundCode: e.target.value }))
+                    setFormData((prev) => ({
+                      ...prev,
+                      clientFundCode: e.target.value,
+                    }))
                   }
                   placeholder="Optional code"
                   className="form-input-standard"
@@ -300,7 +341,10 @@ export default function AddFundDrawer({
                   type="text"
                   value={formData.fundRefCode || ""}
                   onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, fundRefCode: e.target.value }))
+                    setFormData((prev) => ({
+                      ...prev,
+                      fundRefCode: e.target.value,
+                    }))
                   }
                   placeholder="Optional reference"
                   className="form-input-standard"
@@ -323,7 +367,11 @@ export default function AddFundDrawer({
                 disabled={isSubmitting}
                 className="px-5 py-2 rounded-md bg-portal-navy hover:bg-portal-navy-hover text-white text-xs sm:text-sm font-semibold shadow-sm transition-colors disabled:opacity-50"
               >
-                {isSubmitting ? "Saving..." : isEditing ? "Save Changes" : "Submit"}
+                {isSubmitting
+                  ? "Saving..."
+                  : isEditing
+                    ? "Save Changes"
+                    : "Submit"}
               </button>
             </div>
           </form>

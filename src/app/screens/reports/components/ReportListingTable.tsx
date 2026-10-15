@@ -39,11 +39,7 @@ export default function ReportListingTable({
     () => [
       {
         accessorKey: "reportID",
-        header: () => (
-          <span className="font-medium text-[14px] text-slate-700">
-            Report ID
-          </span>
-        ),
+        header: "Report ID",
         cell: ({ row }) => (
           <span className="font-normal text-slate-600 px-1">
             {row.original.reportID}
@@ -52,11 +48,7 @@ export default function ReportListingTable({
       },
       {
         accessorKey: "reportName",
-        header: () => (
-          <span className="font-medium text-[14px] text-slate-700">
-            Report Name
-          </span>
-        ),
+        header: "Report Name",
         cell: ({ row }) => {
           const isSelected = selectedReport?.reportID === row.original.reportID;
           return (
@@ -77,11 +69,7 @@ export default function ReportListingTable({
       },
       {
         accessorKey: "reportDesc",
-        header: () => (
-          <span className="font-medium text-[14px] text-slate-700">
-            Report Desc
-          </span>
-        ),
+        header: "Report Desc",
         cell: ({ row }) => (
           <span className="text-slate-600 font-normal">
             {row.original.reportDesc || "N/A"}
@@ -93,7 +81,7 @@ export default function ReportListingTable({
   );
 
   return (
-    <div className="bg-white border border-slate-100 rounded-md  overflow-hidden">
+    <div className="bg-white  overflow-hidden">
       {/* Table Header Controls */}
       <div className="p-2 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50/50">
         <div className="flex items-center gap-2 font-medium text-[12px] text-slate-700 tracking-wider">

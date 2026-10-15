@@ -6,14 +6,18 @@ import { TaskMetadata } from "../types";
 import { DeleteNewMeta } from "../api";
 import ReusableTable from "@/components/common/ReusableTable";
 import SearchBar from "@/components/common/SearchBar";
-import { FileSpreadsheet, FileText, Trash2, Edit, AlertTriangle, X, RefreshCw } from "lucide-react";
+import { FileSpreadsheet, FileText, Trash2, Edit, Plus, RotateCw, Play, SlidersHorizontal } from "lucide-react";
 import { exportTableToPDF } from "@/lib/pdfExport";
+import ConfirmDeleteModal from "@/components/common/ConfirmDeleteModal";
 
 export interface ProcessListProps {
   metadataList: TaskMetadata[];
   isLoading?: boolean;
   onRefresh?: () => void;
+  onAddTask?: () => void;
+  onCreateTask?: () => void;
   onEditTask?: (task: TaskMetadata) => void;
+  onRunTask?: (task: TaskMetadata) => void;
   onDeleteSuccess?: (deletedId: string | number) => void;
 }
 
@@ -21,7 +25,10 @@ export default function ProcessList({
   metadataList = [],
   isLoading = false,
   onRefresh,
+  onAddTask,
+  onCreateTask,
   onEditTask,
+  onRunTask,
   onDeleteSuccess,
 }: ProcessListProps) {
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -110,13 +117,17 @@ export default function ProcessList({
       {
         accessorKey: "name",
         header: "Name",
-        cell: (info) => <span className="font-bold text-slate-800">{info.getValue() as string}</span>,
+        cell: (info) => (
+          <span className="font-semibold text-slate-800">
+            {info.getValue() as string}
+          </span>
+        ),
       },
       {
         accessorKey: "spName",
         header: "SP Name",
         cell: (info) => (
-          <code className="text-xs bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded font-mono">
+          <code className="bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded font-mono">
             {(info.getValue() as string) || "-"}
           </code>
         ),
@@ -125,7 +136,7 @@ export default function ProcessList({
         accessorKey: "description",
         header: "Description",
         cell: (info) => (
-          <span className="text-xs text-slate-600 truncate max-w-xs inline-block">
+          <span className="text-slate-600 truncate max-w-xs inline-block">
             {(info.getValue() as string) || "-"}
           </span>
         ),
@@ -135,14 +146,9 @@ export default function ProcessList({
         header: "Return Type",
         cell: (info) => {
           const type = (info.getValue() as string) || "dataset";
-          const isDataset = type === "dataset";
           return (
-            <span
-              className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${
-                isDataset ? "bg-blue-100 text-blue-700" : "bg-purple-100 text-purple-700"
-              }`}
-            >
-              {isDataset ? "Data Views" : "Data Process"}
+            <span className="text-slate-700 font-normal">
+              {type === "dataprocess" ? "Data Process" : "Data Views"}
             </span>
           );
         },
@@ -153,12 +159,22 @@ export default function ProcessList({
         cell: (info) => {
           const task = info.row.original;
           return (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
+              {onRunTask && (
+                <button
+                  onClick={() => onRunTask(task)}
+                  className="p-1.5 rounded-md text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 transition-colors"
+                  title="Run Task"
+                  type="button"
+                >
+                  <Play size={15} />
+                </button>
+              )}
               {onEditTask && (
                 <button
                   onClick={() => onEditTask(task)}
-                  className="p-1 text-slate-500 hover:text-blue-600 transition-colors"
-                  title="Edit Metadata"
+                  className="btn-action-edit"
+                  title="Edit Task / Metadata"
                   type="button"
                 >
                   <Edit size={16} />
@@ -166,7 +182,7 @@ export default function ProcessList({
               )}
               <button
                 onClick={() => setDeleteModalTask(task)}
-                className="p-1 text-slate-500 hover:text-red-600 transition-colors"
+                className="btn-action-delete"
                 title="Delete Metadata"
                 type="button"
               >
@@ -177,7 +193,7 @@ export default function ProcessList({
         },
       },
     ],
-    [onEditTask]
+    [onEditTask, onRunTask]
   );
 
   return (
@@ -191,7 +207,7 @@ export default function ProcessList({
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <SearchBar
             value={searchQuery}
             onChange={setSearchQuery}
@@ -199,105 +215,90 @@ export default function ProcessList({
             className="w-48 sm:w-60"
           />
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 border-r border-slate-200 pr-3">
             <button
               onClick={handleExportExcel}
               className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition-colors shadow-2xs"
-              title="Export to Excel"
+              title="Export to Excel / CSV"
               type="button"
             >
-              <FileSpreadsheet className="h-4 w-4 text-emerald-600" />
+              <div className="relative flex items-center justify-center">
+                <FileSpreadsheet className="h-5 w-5 text-emerald-600" />
+                <span className="absolute text-[8px] font-black text-emerald-600 right-0 bottom-0 bg-white">
+                  X
+                </span>
+              </div>
             </button>
             <button
               onClick={handleExportPDF}
               className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition-colors shadow-2xs"
-              title="Export to PDF (Task.pdf)"
+              title="Export to PDF"
               type="button"
             >
-              <FileText className="h-4 w-4 text-red-500" />
+              <div className="relative flex items-center justify-center">
+                <FileText className="h-5 w-5 text-red-500" />
+                <span className="absolute text-[7px] font-black text-red-500 -right-1 -bottom-0.5 bg-white">
+                  PDF
+                </span>
+              </div>
             </button>
             {onRefresh && (
               <button
                 onClick={onRefresh}
-                className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition-colors shadow-2xs"
-                title="Refresh list"
+                className="p-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition-colors shadow-2xs"
+                title="Refresh Data"
                 type="button"
               >
-                <RefreshCw className={`h-4 w-4 text-slate-600 ${isLoading ? "animate-spin" : ""}`} />
+                <RotateCw
+                  className={`h-4 w-4 text-slate-700 ${
+                    isLoading ? "animate-spin text-portal-navy" : ""
+                  }`}
+                />
               </button>
             )}
           </div>
+
+          {(onCreateTask || onAddTask) && (
+            <button
+              type="button"
+              onClick={onCreateTask || onAddTask}
+              className="flex items-center gap-1.5 rounded-md bg-portal-navy px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-portal-navy-hover active:opacity-90 transition-colors"
+            >
+              <Plus size={16} /> Create Task
+            </button>
+          )}
         </div>
       </div>
 
       {/* Grid Table */}
-      <ReusableTable
-        columns={columns}
-        data={filteredList}
-        isLoading={isLoading}
-        emptyMessage="No metadata task records found."
-        enablePagination={true}
-        initialPageSize={10}
+      <div className="p-2">
+        <ReusableTable
+          columns={columns}
+          data={filteredList}
+          isLoading={isLoading}
+          emptyMessage="No metadata task records found."
+          containerClassName="border border-slate-200 shadow-2xs"
+          headerClassName="bg-slate-50 text-slate-800 border-b border-slate-200 font-semibold"
+          rowClassName="even:bg-slate-50/50 hover:bg-slate-50/90 transition-colors"
+        />
+      </div>
+
+      {/* Reusable Delete Confirmation Modal */}
+      <ConfirmDeleteModal
+        isOpen={Boolean(deleteModalTask)}
+        onClose={() => {
+          setDeleteModalTask(null);
+          setDeleteError(null);
+        }}
+        onConfirm={confirmDelete}
+        title="Delete Task Metadata"
+        itemName={deleteModalTask?.name}
+        warningMessage="This action cannot be undone. Any parameters and export bindings will also be removed."
+        errorMessage={deleteError}
+        isDeleting={isDeleting}
+        confirmButtonText="Delete Task"
       />
-
-      {/* Delete Confirmation Modal */}
-      {deleteModalTask && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4">
-          <div className="w-full max-w-md bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 bg-slate-50">
-              <div className="flex items-center gap-2 text-red-600 font-bold text-base">
-                <AlertTriangle size={20} />
-                Delete Task Metadata
-              </div>
-              <button
-                onClick={() => setDeleteModalTask(null)}
-                className="p-1 text-slate-400 hover:text-slate-600 rounded-lg"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <div className="p-5 space-y-3">
-              <p className="text-sm text-slate-700">
-                Are you sure you want to delete{" "}
-                <span className="font-bold text-slate-900">&quot;{deleteModalTask.name}&quot;</span>?
-                This action cannot be undone.
-              </p>
-
-              {deleteError && (
-                <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700">
-                  {deleteError}
-                </div>
-              )}
-            </div>
-
-            <div className="flex items-center justify-end gap-3 px-5 py-3 border-t border-slate-100 bg-slate-50">
-              <button
-                onClick={() => setDeleteModalTask(null)}
-                className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 transition-colors"
-                type="button"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmDelete}
-                disabled={isDeleting}
-                className="px-4 py-2 rounded-lg bg-red-600 text-xs font-semibold text-white hover:bg-red-700 transition-colors shadow-xs disabled:opacity-50 flex items-center gap-1.5"
-                type="button"
-              >
-                {isDeleting ? (
-                  <>
-                    <RefreshCw size={14} className="animate-spin" />
-                    Deleting...
-                  </>
-                ) : (
-                  "Delete Task"
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
+

@@ -22,23 +22,10 @@ import {
 } from "./types";
 import TaskForm from "./components/TaskForm";
 import TableData from "./components/TableData";
-import ProcessList from "./components/ProcessList";
-import {
-  Calendar,
-  CheckSquare,
-  Layers,
-  CheckCircle2,
-  AlertCircle,
-  RefreshCw,
-} from "lucide-react";
+import ConstantMessageBanner from "@/components/common/ConstantMessageBanner";
 
 export default function TaskPage() {
   const [client, setClient] = useState<Client | null>(null);
-
-  // Active top-level view tab: "executor" (Task Execution Form & Results) vs "processList" (Metadata Admin)
-  const [activeTab, setActiveTab] = useState<"executor" | "processList">(
-    "executor",
-  );
 
   // Selected radio returnType: "dataset" (Data Views) vs "dataprocess" (Data Process)
   const [returnType, setReturnType] = useState<TaskReturnType>("dataset");
@@ -72,6 +59,21 @@ export default function TaskPage() {
     queryFn: () => fetchMetadataList(clientID),
     staleTime: 1000 * 60 * 5,
   });
+
+  // Auto-select task if navigated from create-task or directory with taskId
+  useEffect(() => {
+    if (typeof window !== "undefined" && metadataList.length > 0) {
+      const params = new URLSearchParams(window.location.search);
+      const taskId = params.get("taskId");
+      if (taskId) {
+        const found = metadataList.find((m) => String(m.id) === String(taskId));
+        if (found) {
+          setSelectedTask(found);
+          setReturnType(found.returnType || "dataset");
+        }
+      }
+    }
+  }, [metadataList]);
 
   // 2. Fetch Fund Lookup from API
   const { data: fundList = [], isLoading: isLoadingFunds } = useQuery<
@@ -184,61 +186,32 @@ export default function TaskPage() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Main Content Area */}
-      {activeTab === "executor" ? (
-        <div className="space-y-6">
-          {/* Form & Table Layout */}
-          <div className="flex flex-col items-start gap-4">
-            {/* Dynamic Task Form Component */}
-            <TaskForm
-              metadataList={metadataList}
-              isLoadingMetadata={isLoadingMetadata}
-              fundList={fundList}
-              isLoadingFunds={isLoadingFunds}
-              participantList={participantList}
-              isLoadingParticipants={isLoadingParticipants}
-              parameters={parameters}
-              isLoadingParameters={isLoadingParameters}
-              selectedTask={selectedTask}
-              onSelectTask={setSelectedTask}
-              onReturnTypeChange={setReturnType}
-              onSubmit={handleFormSubmit}
-              onCancel={handleFormCancel}
-              isSubmitting={isSubmitting}
-              apiError={apiError}
-              feedbackBanner={feedbackBanner}
-            />
+    <div className="space-y-4">
+      {/* Dynamic Task Form Component */}
+      <TaskForm
+        metadataList={metadataList}
+        isLoadingMetadata={isLoadingMetadata}
+        fundList={fundList}
+        isLoadingFunds={isLoadingFunds}
+        participantList={participantList}
+        isLoadingParticipants={isLoadingParticipants}
+        parameters={parameters}
+        isLoadingParameters={isLoadingParameters}
+        selectedTask={selectedTask}
+        onSelectTask={setSelectedTask}
+        onReturnTypeChange={setReturnType}
+        onSubmit={handleFormSubmit}
+        onCancel={handleFormCancel}
+        isSubmitting={isSubmitting}
+        apiError={apiError}
+        feedbackBanner={feedbackBanner}
+      />
 
-            {/* Task Execution Result Grid Component (TableData) */}
-            {returnType === "dataprocess" && (
-              <div className="w-full">
-                {/* <TableData
-                  getExecuteValue={executeResult}
-                  isLoading={isSubmitting}
-                  taskTitle={
-                    selectedTask
-                      ? `${selectedTask.name} — Execution Results`
-                      : "Task Execution Results"
-                  }
-                /> */}
-              </div>
-            )}
-          </div>
+      {/* Task Execution Result Grid Component (TableData) */}
+      {returnType === "dataprocess" && (
+        <div className="w-full">
+          {/* Execution results if applicable */}
         </div>
-      ) : (
-        /* Metadata Administration List Component (ProcessList) */
-        <ProcessList
-          metadataList={metadataList}
-          isLoading={isLoadingMetadata}
-          onRefresh={refetchMetadata}
-          onEditTask={(task) => {
-            setSelectedTask(task);
-            setReturnType(task.returnType);
-            setActiveTab("executor");
-          }}
-          onDeleteSuccess={() => refetchMetadata()}
-        />
       )}
     </div>
   );

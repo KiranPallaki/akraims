@@ -30,13 +30,19 @@ export default function ParticipantPage() {
   const [searchQuery, setSearchQuery] = useState("");
 
   // Local state changes to update the grid immediately
-  const [localParticipants, setLocalParticipants] = useState<ParticipantItem[]>([]);
-  const [deletedParticipantIds, setDeletedParticipantIds] = useState<(number | string)[]>([]);
+  const [localParticipants, setLocalParticipants] = useState<ParticipantItem[]>(
+    [],
+  );
+  const [deletedParticipantIds, setDeletedParticipantIds] = useState<
+    (number | string)[]
+  >([]);
 
   // Drawer & Modal states
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [editingParticipant, setEditingParticipant] = useState<ParticipantItem | null>(null);
-  const [deleteModalParticipant, setDeleteModalParticipant] = useState<ParticipantItem | null>(null);
+  const [editingParticipant, setEditingParticipant] =
+    useState<ParticipantItem | null>(null);
+  const [deleteModalParticipant, setDeleteModalParticipant] =
+    useState<ParticipantItem | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
 
@@ -118,7 +124,7 @@ export default function ParticipantPage() {
 
   const handleDrawerSubmit = async (
     values: ParticipantFormValues,
-    initialFundIds: (number | string)[]
+    initialFundIds: (number | string)[],
   ): Promise<boolean> => {
     setIsSubmitting(true);
     setApiError(null);
@@ -128,10 +134,10 @@ export default function ParticipantPage() {
     if (editingParticipant) {
       // Edit Flow
       const addFundIds = values.selectedFundIds.filter(
-        (id) => !initialFundIds.includes(id)
+        (id) => !initialFundIds.includes(id),
       );
       const removeFundIds = initialFundIds.filter(
-        (id) => !values.selectedFundIds.includes(id)
+        (id) => !values.selectedFundIds.includes(id),
       );
 
       const payload: UpdateParticipantPayload = {
@@ -148,7 +154,7 @@ export default function ParticipantPage() {
       const res = await submitUpdateParticipant(
         editingParticipant.participantID,
         payload,
-        clientID
+        clientID,
       );
 
       if (!res.ok) {
@@ -169,8 +175,10 @@ export default function ParticipantPage() {
 
       setLocalParticipants((prev) =>
         prev.map((p) =>
-          p.participantID === editingParticipant.participantID ? updatedItem : p
-        )
+          p.participantID === editingParticipant.participantID
+            ? updatedItem
+            : p,
+        ),
       );
     } else {
       // Create Flow
@@ -217,7 +225,13 @@ export default function ParticipantPage() {
   // Export handlers
   const handleExportExcel = () => {
     if (filteredData.length === 0) return;
-    const headers = ["Participant Name", "Participant Type", "Status", "Open Date", "Close Date"];
+    const headers = [
+      "Participant Name",
+      "Participant Type",
+      "Status",
+      "Open Date",
+      "Close Date",
+    ];
     const rows = filteredData.map((p) => [
       `"${(p.participantName || "").replace(/"/g, '""')}"`,
       `"${(p.participantType || "").replace(/"/g, '""')}"`,
@@ -234,7 +248,7 @@ export default function ParticipantPage() {
     link.setAttribute("href", encodedUri);
     link.setAttribute(
       "download",
-      `Participant_List_${new Date().toISOString().slice(0, 10)}.csv`
+      `Participant_List_${new Date().toISOString().slice(0, 10)}.csv`,
     );
     document.body.appendChild(link);
     link.click();
@@ -243,7 +257,13 @@ export default function ParticipantPage() {
 
   const handleExportPDF = () => {
     if (filteredData.length === 0) return;
-    const headers = ["Participant Name", "Participant Type", "Status", "Open Date", "Close Date"];
+    const headers = [
+      "Participant Name",
+      "Participant Type",
+      "Status",
+      "Open Date",
+      "Close Date",
+    ];
     const rows = filteredData.map((p) => [
       p.participantName || "-",
       p.participantType || "-",
@@ -269,21 +289,6 @@ export default function ParticipantPage() {
 
   return (
     <div className="space-y-4">
-      {/* Page Header Card */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end">
-        
-
-        <div className="flex items-center gap-2 self-start sm:self-auto">
-          <button
-            type="button"
-            onClick={handleOpenAdd}
-            className="flex items-center gap-1.5 rounded-md bg-portal-navy px-3 py-2 text-xs sm:text-sm font-semibold text-white shadow-sm hover:bg-portal-navy-hover active:opacity-90 transition-colors"
-          >
-            <Plus size={16} /> Add Participant
-          </button>
-        </div>
-      </div>
-
       {/* Main Table Card */}
       <div className="rounded-xl border border-slate-200 bg-white shadow-xs overflow-hidden">
         {/* Table Toolbar: Search & Export Buttons */}
@@ -338,6 +343,13 @@ export default function ParticipantPage() {
                 }`}
               />
             </button>
+            <button
+              type="button"
+              onClick={handleOpenAdd}
+              className="flex items-center gap-1.5 rounded-md bg-portal-navy px-3 py-2 text-xs sm:text-sm font-semibold text-white shadow-sm hover:bg-portal-navy-hover active:opacity-90 transition-colors"
+            >
+              <Plus size={16} /> Add Participant
+            </button>
           </div>
         </div>
 
@@ -347,7 +359,7 @@ export default function ParticipantPage() {
             columns={columns}
             data={filteredData}
             isLoading={isLoading}
-             enablePagination={false}
+            enablePagination={false}
             emptyMessage="No participants found."
             containerClassName="border border-slate-200 shadow-2xs"
             headerClassName="bg-slate-50 text-slate-800 border-b border-slate-200 font-semibold"
