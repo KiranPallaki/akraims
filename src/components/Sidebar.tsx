@@ -141,6 +141,14 @@ export const getMenuHref = (toURL: string): string => {
   ) {
     return "/screens/users";
   }
+  if (
+    cleanUrl === "rebalance" ||
+    cleanUrl === "rebalances" ||
+    cleanUrl === "fundrebalance" ||
+    cleanUrl === "fund-rebalance"
+  ) {
+    return "/screens/rebalance";
+  }
   return `/screens/${cleanUrl}`;
 };
 
